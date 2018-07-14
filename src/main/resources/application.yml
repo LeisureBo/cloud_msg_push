@@ -1,0 +1,18 @@
+server:
+  port: 8101
+spring:
+  application:
+    name: cloud-msg-push
+  redis:
+    cluster:
+      nodes:
+      - 172.18.10.108:9000
+      - 172.18.10.108:9001
+      - 172.18.10.108:9002
+      - 172.18.10.108:9003
+      - 172.18.10.108:9004
+      - 172.18.10.108:9005
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8091/eureka/

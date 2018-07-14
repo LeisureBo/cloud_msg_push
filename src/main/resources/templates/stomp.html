@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>websocket test</title>
+<script th:src="@{js/sockjs.min.js}"></script>
+<script th:src="@{js/stomp.js}"></script>
+<script th:src="@{js/jquery-3.1.1.js}"></script>
+<script type="text/javascript">
+	
+	var socket = null;
+	var stompClient = null;
+	var users = null;
+	var currentUser = null;
+
+	$(document).ready(function(){
+		// 初始化随机用户集合
+		initUsers();
+		// 初始化页面
+		initPages();
+	});
+	
+	$(window).on("unload", function(e) {
+		// 窗口强制关闭时关闭socket连接
+		disconnect();
+		alert("Handler for .unload() called.");
+	});
+
+	function connect() {
+		// SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
+		socket = new SockJS("http://127.0.0.1:8100/msgpush/stomp");// 连接SockJS的endpoint
+		// socketHandler();
+		stompClient = Stomp.over(socket);// 使用STMOP子协议的WebSocket客户端
+		// client will send heartbeats every 20000ms
+		stompClient.heartbeat.outgoing = 2000000000;
+		// client does not want to receive heartbeats from the server
+		stompClient.heartbeat.incoming = 2000000000;
+		// 向服务器发起websocket连接并发送CONNECT帧
+		stompClient.connect(
+		// 携带stomp header信息
+		{
+			"token" : currentUser // 标识当前客户端,用于认证
+		},
+		// 连接成功回调函数
+		function connectCallback(frame) {
+			// 显示聊天室信息
+			setConnected(true);
+			// 订阅服务器广播消息
+			stompClient.subscribe("/topic/notice", function(response) {
+				showNotice(JSON.parse(response.body).message);
+			});
+			// 订阅发送到当前用户的P2P消息
+			stompClient.subscribe("/custom/queue/msg", function(response) {
+				showNotice(JSON.parse(response.body).message);
+			});
+			// 订阅消息发送处理出错的消息
+			//stompClient.subscribe("/amq/queue/error", function(response) {
+			//	showNotice(JSON.parse(response.body).message);
+			//});
+		},
+		// 连接失败回调函数
+		function errorCallBack(error) {
+			// 连接失败时(服务器响应 ERROR帧的回调方法
+			if (stompClient != null) {
+				stompClient.disconnect();
+			}
+			if (socket != null) {
+				socket.close();
+			}
+			showNotice("Connected error ...");
+			alert("connected error");
+		});
+	}
+
+	function disconnect() {
+		if (stompClient != null) {
+			stompClient.disconnect();
+		}
+		if (socket != null) {
+			socket.close();
+		}
+		setConnected(false);
+	}
+
+	/** websocket消息处理 
+	 *  JS使用：var socket = new WebSocket(url);
+	 */
+	function socketHandler() {
+		socket.onopen = function() {
+			alert(1);
+			console.log("------连接成功------");
+		};
+		socket.onmessage = function(event) {
+			console.log("-----Received: " + event.data);
+		};
+		socket.onclose = function(event) {
+			console.log("------连接关闭------");
+		};
+		//连接发生错误
+		socket.onerror = function() {
+			console.log("连接错误", "网络超时或通讯地址错误.");
+			// disconnect();
+		};
+	}
+
+	function sendNotice() {
+		var notice = $("#notice").val();
+		var clientMessage = {
+			"fromUserId" : currentUser,
+			"toUserId" : "all",
+			"message" : notice
+		};
+		// 第一个参数：json负载消息发送的 目的地； 第二个参数：是一个头信息的Map，它会包含在 STOMP帧中；第三个参数：负载消息
+		stompClient.send("/app/send-notice", {}, JSON.stringify(clientMessage));
+		$("#notice").val('');
+	}
+
+	function sendToUser() {
+		var msg = $("#notice").val();
+		var clientMessage = {
+			"fromUserId" : currentUser,
+			"toUserId" : $("#toUserId").val(),
+			"message" : msg
+		};
+		console.log(clientMessage);
+		stompClient.send("/app/send-msg", {}, JSON.stringify(clientMessage));
+		$("#notice").val('');
+	}
+
+	function setConnected(connected) {
+		$("#connect").attr("disabled", connected);
+		$("#disconnect").attr("disabled", !connected);
+		$("#chatRoomDiv").css("visibility", connected ? 'visible' : 'hidden');
+		// 清空输入框
+		$("#notice").val("");
+		// 清空聊天记录
+		$("#response").html("");
+		// 打印连接成功
+		if (connected) {
+			// 设置欢迎语
+			$("#greeting").prepend(currentUser + ': ');
+			// 通知页面链接成功
+			showNotice("Connected success ...");
+		} else {
+			$("#greeting").html('欢迎来到聊天室 ~');
+		}
+	}
+
+	function showNotice(msg) {
+		$("#response").append("<br/>" + msg);
+	}
+
+	function initPages() {
+		// 隐藏聊天室
+		setConnected(false);
+	}
+
+	/** 初始化用户信息 */
+	function initUsers() {
+		users = new Array();
+		users[0] = 'Lily';
+		users[1] = 'Tom';
+		users[2] = 'Money';
+		users[3] = 'Lin';
+		users[4] = 'Easy';
+		users[5] = 'Xiong';
+		users[6] = 'HuiZhu';
+		users[7] = 'Teng';
+		users[8] = 'Jack';
+		users[9] = 'Bo';
+		// 初始化当前用户
+		currentUser = getRandomUser();
+		//currentUser = 'bo';
+	}
+
+	/** 获取0~max范围内的随机整数 */
+	function getRandomInt(max) {
+		return parseInt(Math.random() * max);
+	}
+
+	function getRandomUser() {
+		var index = getRandomInt(10);
+		console.log('random index: ' + index);
+		return users[index];
+	}
+</script>
+</head>
+<body>
+<noscript>
+	<h2 style="color: #e80b0a;">Sorry,您的浏览器不支持WebSocket!</h2>
+</noscript>
+<div>
+	<div>
+		<button id="connect" onclick="connect();">连接</button>
+		<button id="disconnect" disabled="disabled" onclick="disconnect();">断开连接</button>
+	</div>
+	<div id="chatRoomDiv">
+		<p><label id="greeting">欢迎来到聊天室 ~</label></p>
+		<p><textarea rows="3" cols="30" id="notice" placeholder="输入你想说的话..."></textarea></p>
+		<div style="margin-bottom: 0; padding-bottom: 0;background: none;">
+			<button id="sendNotice" onclick="sendNotice();">发布</button>
+			发给:
+			<input id="toUserId" size="9" type="text" placeholder="输入用户ID" />
+			<button id="sendToUser" onclick="sendToUser();">确定</button>
+		</div>
+		<p style="margin-top: 0; padding-top:0; background: none;" id="response"></p>
+	</div>
+</div>
+
+</body>
+</html>

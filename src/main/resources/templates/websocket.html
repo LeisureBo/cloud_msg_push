@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<title>Insert title here</title>
+<script th:src="@{js/jquery-3.1.1.js}"></script>
+<script type="text/javascript">
+
+	var clientId = null;
+	var websocket = null;
+	var path = "ws://127.0.0.1:8100/msgpush/websocket/";
+	//var path = "ws://127.0.0.1:8101/test/";
+	
+	$(function() {
+		clientId = getRandomInt(50);
+		connectWebSocket();
+		showMsg("");
+	});
+
+	//强制关闭浏览器  调用websocket.close(),进行正常关闭
+	window.onunload = function() {
+		//关闭连接   
+		closeWebSocket();
+	}
+
+	//建立WebSocket连接
+	function connectWebSocket() {
+
+		console.log("onstart ...");
+	
+		//建立webSocket连接
+		websocket = new WebSocket(path + clientId);
+
+		//打开webSokcet连接时，回调该函数
+		websocket.onopen = function() {
+			console.log("onpen...");
+			showMsg("connection opened --> clientId: "+clientId);
+		}
+
+		//关闭webSocket连接时，回调该函数
+		websocket.onclose = function() {
+			//关闭连接    
+			console.log("onclose...");
+			showMsg("connection closed ...");
+		}
+
+		//接收信息
+		websocket.onmessage = function(resp) {
+			console.log("receive: " + resp.data);
+			showMsg("received: " + resp.data);
+		}
+		
+		websocket.onerror = function(){
+	        console.log("error...");
+	        showMsg("connection error ...");
+	    }
+	}
+
+	//发送消息
+	function sendAll() {
+		var postValue = {};
+		postValue.toUserId='all';
+		postValue.fromUserId = clientId;
+		postValue.message = $("#textAll").val();
+		websocket.send(JSON.stringify(postValue));
+	}
+	
+	// 发送消息
+	function sendTo() {
+		var postValue = {};
+		postValue.toUserId= $("#textTo").val();
+		postValue.fromUserId = clientId;
+		postValue.message = $("#textAll").val();
+		websocket.send(JSON.stringify(postValue));
+	}
+	
+	// 展示信息
+	function showMsg(msg){
+		$("#message").append("<br/>" + msg);
+	}
+	
+	function getRandomInt(max){
+		return parseInt(Math.random() * max);
+	}
+	
+	//关闭连接
+	function closeWebSocket() {
+		if (websocket != null) {
+			websocket.close();
+		}
+	}
+</script>
+</head>
+<body>
+	<input id="textAll" type="text" />
+	<button onclick="sendAll()">sendAll</button>
+	<button onclick="sendTo()">sendTo</button>
+	<input id="textTo" type="text" size="5" />
+	<button onclick="closeWebSocket()">Close</button><br/>
+	<div id="message"></div>
+</body>
+</html>
