@@ -18,6 +18,9 @@ public class ClientAuthInfo implements Principal {
 		this.userId = userId;
 	}
 
+	/**
+	 * @reeturn 此处返回用户的标识ID
+	 */
 	@Override
 	public String getName() {
 		return this.userId;
@@ -31,4 +34,9 @@ public class ClientAuthInfo implements Principal {
 		this.userId = userId;
 	}
 
+	@Override
+	public String toString() {
+		return "ClientAuthInfo [userId=" + userId + "]";
+	}
+	
 }

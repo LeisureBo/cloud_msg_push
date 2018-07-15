@@ -32,9 +32,9 @@
 		// socketHandler();
 		stompClient = Stomp.over(socket);// 使用STMOP子协议的WebSocket客户端
 		// client will send heartbeats every 20000ms
-		stompClient.heartbeat.outgoing = 2000000000;
-		// client does not want to receive heartbeats from the server
-		stompClient.heartbeat.incoming = 2000000000;
+		stompClient.heartbeat.outgoing = 20000;
+		// client does not want to receive heartbeats from the server with config 0
+		stompClient.heartbeat.incoming = 20000;
 		// 向服务器发起websocket连接并发送CONNECT帧
 		stompClient.connect(
 		// 携带stomp header信息
@@ -50,13 +50,13 @@
 				showNotice(JSON.parse(response.body).message);
 			});
 			// 订阅发送到当前用户的P2P消息
-			stompClient.subscribe("/custom/queue/msg", function(response) {
+			stompClient.subscribe("/user/topic/msg", function(response) {///user/exchange/amq.direct/msg
 				showNotice(JSON.parse(response.body).message);
 			});
 			// 订阅消息发送处理出错的消息
-			//stompClient.subscribe("/amq/queue/error", function(response) {
-			//	showNotice(JSON.parse(response.body).message);
-			//});
+			stompClient.subscribe("/user/topic/error", function(response) {
+				showNotice(JSON.parse(response.body).message);
+			});
 		},
 		// 连接失败回调函数
 		function errorCallBack(error) {

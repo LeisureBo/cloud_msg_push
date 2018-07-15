@@ -18,7 +18,7 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
  * @author wangboc
  * @version 2018年6月26日　下午11:56:05
  */
-public class CustomHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
+public class ClientHandshakeInterceptor extends HttpSessionHandshakeInterceptor {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
@@ -29,8 +29,9 @@ public class CustomHandshakeInterceptor extends HttpSessionHandshakeInterceptor 
         if(request.getHeaders().containsKey("Sec-WebSocket-Extensions")) {
             request.getHeaders().set("Sec-WebSocket-Extensions", "permessage-deflate");
         }
-        logger.info("xxx用户准备建立websocket握手...");
+        logger.info("Http协议转换Websoket协议进行握手前 -->" + request.getURI());
         HttpSession session = getSession(request);
+        // to-do 为什么此处获取不到session?
         if(session != null) {
         	// 把sessionId和accountId保存到WebsocketSession
 //        	attributes.put(WebSocketConst.SESSION_KEY_ACCT_ID, session.getAttribute(WebSocketConst.SESSION_KEY_ACCT_ID));
@@ -56,7 +57,7 @@ public class CustomHandshakeInterceptor extends HttpSessionHandshakeInterceptor 
 	@Override
 	public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler,
 			Exception ex) {
-		super.afterHandshake(request, response, wsHandler, ex);
+		logger.info("Http协议转换Websoket协议握手成功后 --> " + response.getHeaders().getDate());
 	}
 	
 }

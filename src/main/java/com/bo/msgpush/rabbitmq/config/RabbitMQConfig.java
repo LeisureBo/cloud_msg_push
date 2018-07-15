@@ -80,7 +80,7 @@ public class RabbitMQConfig {
 		return new Queue(commonQueue, true);// 队列持久
 	}
 	
-	@Bean
+//	@Bean
 	public Queue msgQueue() {
 		return new Queue("msg", true);// 队列持久
 	}

@@ -13,7 +13,7 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 import com.bo.msgpush.service.WebSocketHandlerService;
 
 /**
- * @notes websocket configuration
+ * @notes websocket configuration 与 rabbitmq结合实现分布式消息推送
  * 
  * @author wangboc
  * 

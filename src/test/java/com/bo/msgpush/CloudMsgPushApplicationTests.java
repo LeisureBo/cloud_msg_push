@@ -46,7 +46,7 @@ public class CloudMsgPushApplicationTests {
 		rabbitTemplate.setReturnCallback(returnCallback);
 	}
 
-	@Test
+//	@Test
 	public void contextLoads() throws IOException {
 		ClientMessage clientMessage = new ClientMessage();
 		clientMessage.setMessage("hello kitty.");
@@ -55,6 +55,16 @@ public class CloudMsgPushApplicationTests {
 		String userEndpoint = redisClientService.getHashValue(WebSocketHandlerService.USER_ENDPOINT_KEY, clientMessage.getToUserId());
 		userEndpoint = userEndpoint == null ? "" : userEndpoint;
 		rabbitTemplate.convertAndSend(userEndpoint + exchangeName, userEndpoint + commonRoutingKey, JsonUtils.toJson(clientMessage));
+		System.in.read();
+	}
+	
+	@Test
+	public void sendMsgToStompBroker() throws IOException {
+		ClientMessage clientMessage = new ClientMessage();
+		clientMessage.setMessage("System Info: Goodnight Everyone!");
+		clientMessage.setFromUserId("System");
+		clientMessage.setToUserId("21");
+		rabbitTemplate.convertAndSend("amq.topic", "notice", JsonUtils.toJson(clientMessage));
 		System.in.read();
 	}
 	

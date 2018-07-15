@@ -13,11 +13,12 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
  * @Version 2018年6月28日　下午4:17:46
  * @码云 https://gitee.com/LeisureBo
  */
-public class StompMsgHandshakeHandler extends DefaultHandshakeHandler {
+public class ClientHandshakeHandler extends DefaultHandshakeHandler {
 
 	@Override
 	protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler,
 			Map<String, Object> attributes) {
+		// 用于在握手拦截器中获取用户认证信息后在此处设置用户认证信息..
 		return super.determineUser(request, wsHandler, attributes);
 	}
 	
