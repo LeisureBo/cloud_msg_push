@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import com.rabbitmq.client.Channel;
 import com.bo.common.utils.JsonUtils;
 import com.bo.msgpush.domain.ClientMessage;
-import com.bo.msgpush.domain.ServerMessage;
 import com.bo.msgpush.service.WebSocketHandlerService;
 
 /**
@@ -44,8 +43,8 @@ public class MessageListener4Common implements ChannelAwareMessageListener {
 		logger.info("CommonMessageListener onMessage --> " + msgjson);
 		try {
 			ClientMessage clientMessage = JsonUtils.fromJson(msgjson, ClientMessage.class);
-			ServerMessage serverMessage = new ServerMessage("common", clientMessage.getFromUserId(), clientMessage.getToUserId(), clientMessage.getMessage());
-			boolean success = webSocketHandlerService.pushMessage(serverMessage);
+			clientMessage.setType("common");
+			boolean success = webSocketHandlerService.pushMessage(clientMessage);
 			/**
 			 * basicNack(long deliveryTag, boolean multiple, boolean requeue)
 			 * deliveryTag:该消息的index 

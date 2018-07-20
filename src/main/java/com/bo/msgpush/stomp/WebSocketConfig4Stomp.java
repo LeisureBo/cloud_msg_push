@@ -1,5 +1,6 @@
 package com.bo.msgpush.stomp;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
@@ -27,6 +28,18 @@ import org.springframework.web.socket.server.support.HttpSessionHandshakeInterce
 @EnableWebSocketMessageBroker
 public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 
+	@Value("${mq.rabbit.host}")
+	private String host;
+	
+	@Value("${mq.rabbit.stomp.port}")
+	private int port;
+	
+	@Value("${mq.rabbit.username}")
+	private String username;
+	
+	@Value("${mq.rabbit.password}")
+	private String password;
+	
 	/**
 	 * 注册stomp端点用于客户端连接websocket
      * addEndpoint：添加一个服务端点映射地址，来接收客户端的连接; setAllowedOrigins：允许跨域
@@ -59,17 +72,18 @@ public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 		// registry.enableSimpleBroker("/queue", "/topic");
 		// 使用rabbitmq作为外部消息代理，以实现集群消息推送
 		// rabbitmq合法的目的前缀：/temp-queue, /exchange, /topic, /queue, /amq/queue, /reply-queue/
-		registry.enableStompBrokerRelay("/topic", "/amq/queue", "/exchange") // 配置消息代理前缀
-		.setRelayHost("127.0.0.1") // 配置消息代理服务器
-		.setRelayPort(61613) // 配置代理服务器端口
-		.setClientLogin("guest").setClientPasscode("guest") // 配置每个客户端的连接认证信息
-		.setSystemLogin("guest").setSystemPasscode("guest") // 源自服务端的连接的认证信息
+		registry.enableStompBrokerRelay("/topic", "/queue", "/amq/queue", "/exchange") // 配置消息代理前缀
+		.setRelayHost(host) // 配置消息代理服务器.默认:127.0.0.1
+		.setRelayPort(port) // 配置代理服务器端口.默认:61613
+		.setClientLogin(username).setClientPasscode(password) // 配置每个客户端的连接认证信息.默认:guest/guest
+		.setSystemLogin(username).setSystemPasscode(password) // 源自服务端的连接的认证信息.默认:guest/guest
 		.setUserRegistryBroadcast("/topic/simp-user-registry")// 当有用户注册时将其广播到其他服务器
+		.setUserDestinationBroadcast("/topic/unresolved-user-destination")// 将当前服务端点无法发送到user dest的消息广播到其他服务端点处理
 		.setSystemHeartbeatReceiveInterval(15000) // 配置服务端session接收stomp消息代理心跳时间间隔(0代表不接收)
 		.setSystemHeartbeatSendInterval(15000); // 配置服务端session向stomp消息代理发送心跳时间间隔(0代表不接收)
 		// 配置服务端接收消息的地址前缀与@MessageMapping路径组合使用
 		registry.setApplicationDestinationPrefixes("/app");
-		// 配置点对点使用的订阅前缀，默认是"/user" 例如：
+		// 配置点对点使用的订阅前缀，默认是"/user" 例如：(@link org.springframework.messaging.simp.user.DefaultUserDestinationResolver)
 		// 客户端订阅：/user/queue/message
 		// 服务器推送指定用户：/user/{userId}/queue/message
 		registry.setUserDestinationPrefix("/user");
@@ -80,9 +94,17 @@ public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 	 */
 	@Override
 	public void configureClientInboundChannel(ChannelRegistration registration) {
-		registration.taskExecutor().corePoolSize(4) // 设置消息输入通道的线程池线程数
-				.maxPoolSize(8)// 最大线程数
-				.keepAliveSeconds(60);// 线程活动时间
+		registration.taskExecutor()
+			// 核心线程数默认为系统核数*2. 
+			// 如果业务没大量io操作, client与server网络情况情况良好, 则默认配置就可以.
+			// 如果业务方法有大量io操作, 那应当适当加大request channel的线程数, 以充分利用cpu.
+			.corePoolSize(8) // 设置消息输入通道的线程池线程数
+			.maxPoolSize(64)// 最大线程数
+			// queueCapacity的默认配置是无限大;
+			// 如果是无限大, 那么线程数则永远是核心线程数.
+			// 只能当队列容积不够用时, 实际线程数才会大于核心线程数.
+			.queueCapacity(1000) // 队列容积(默认Integer.MAX_VALUE)
+			.keepAliveSeconds(60);// 线程活动时间
 		registration.interceptors(clientInboundChannelInterceptor());
 	}
 
@@ -91,7 +113,12 @@ public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 	 */
 	@Override
 	public void configureClientOutboundChannel(ChannelRegistration registration) {
-		registration.taskExecutor().corePoolSize(4).maxPoolSize(8).keepAliveSeconds(60);
+		// 如果client与server之间网络连接不可控, 比如通过外网连接手机上的客户端, 则应该当适当加大response channel的线程数
+		registration.taskExecutor()
+			.corePoolSize(16)
+			.maxPoolSize(32)
+			.queueCapacity(2000)
+			.keepAliveSeconds(60);
 		registration.interceptors(clientOutboundChannelInterceptor());
 	}
 

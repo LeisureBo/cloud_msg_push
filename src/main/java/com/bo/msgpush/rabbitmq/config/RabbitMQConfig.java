@@ -15,6 +15,8 @@ import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Bean;
@@ -35,8 +37,8 @@ import com.bo.msgpush.rabbitmq.listener.MessageListener4Play;
 @Configuration
 public class RabbitMQConfig {
 
-	@Value("${mq.rabbit.address}")
-	private String address;
+	@Value("${mq.rabbit.addresses}")
+	private String addresses;
 	
 	@Value("${mq.rabbit.username}")
 	private String username;
@@ -80,11 +82,6 @@ public class RabbitMQConfig {
 		return new Queue(commonQueue, true);// 队列持久
 	}
 	
-//	@Bean
-	public Queue msgQueue() {
-		return new Queue("msg", true);// 队列持久
-	}
-	
 	@Bean
 	public Queue playQueue() {
 		return new Queue(playQueue, true);// 队列持久
@@ -92,7 +89,7 @@ public class RabbitMQConfig {
 	
 	@Bean
 	public TopicExchange defaultExchange() {
-		return new TopicExchange(exchangeName);
+		return new TopicExchange(exchangeName, true, false);// 交换机持久化、不自动删除
 	}
 	
 	@Bean
@@ -108,28 +105,33 @@ public class RabbitMQConfig {
 	@Bean // 创建连接工厂
 	public ConnectionFactory connectionFactory() {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
-		connectionFactory.setAddresses(address);
-		connectionFactory.setVirtualHost(virtualHost);
+		connectionFactory.setAddresses(addresses);// addresses list of addresses with form "host[:port],..."
+		connectionFactory.setVirtualHost(virtualHost);// 虚拟主机
 		connectionFactory.setPublisherConfirms(true);// 允许设置消息回调
 		connectionFactory.setChannelCacheSize(sessionCacheSize);// 设置连接数量
-		// connectionFactory.setUsername(username);
-		// connectionFactory.setPassword(password);
+		connectionFactory.setUsername(username);
+		connectionFactory.setPassword(password);
 		return connectionFactory;
 	}
 	
 	@Bean // 创建消息发送模板
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) // 必须是prototype类型(便于不同的消息回调)
-	public RabbitTemplate rabbitTemplate() {
+	public RabbitTemplate rabbitTemplate(MessageConverter messageConverter) {
 		RabbitTemplate template = new RabbitTemplate(connectionFactory());
+//		template.setMessageConverter(messageConverter);// 设置消息转换器
 		return template;
 	}
 	
+	@Bean
+	public MessageConverter messageConverter() {
+		return new Jackson2JsonMessageConverter();
+	}
 	
 	@Bean // 创建监听器
 	public SimpleMessageListenerContainer playMessageContainer(MessageListener4Play playMessageListener) throws AmqpException, IOException {
 		SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory());
 		container.setQueueNames(playQueue);// 设置监听的队列
-		container.setExposeListenerChannel(true);
+		container.setExposeListenerChannel(true);// 需要将channel暴露给listener才能手动确认
 		container.setPrefetchCount(prefetchCount);// 设置每个消费者获取的最大的消息数量
         container.setMaxConcurrentConsumers(maxConcurrentConsumers);// 最大消费者数量
 		container.setConcurrentConsumers(concurrentConsumers);// 消费者数量
@@ -142,7 +144,7 @@ public class RabbitMQConfig {
 	public SimpleMessageListenerContainer commonMessageContainer(MessageListener4Common commonMessageListener) throws AmqpException, IOException {
 		SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory());
 		container.setQueueNames(commonQueue);// 设置监听的队列
-		container.setExposeListenerChannel(true);
+		container.setExposeListenerChannel(true);// 需要将channel暴露给listener才能手动确认
 		container.setPrefetchCount(prefetchCount);// 设置每个消费者获取的最大的消息数量
 		container.setMaxConcurrentConsumers(maxConcurrentConsumers);// 最大消费者数量
 		container.setConcurrentConsumers(concurrentConsumers);// 消费者数量

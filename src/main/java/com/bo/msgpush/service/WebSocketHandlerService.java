@@ -23,7 +23,6 @@ import org.springframework.web.socket.WebSocketSession;
 
 import com.bo.common.utils.JsonUtils;
 import com.bo.msgpush.domain.ClientMessage;
-import com.bo.msgpush.domain.ServerMessage;
 import com.bo.msgpush.websocket.WebSocketInterceptor;
 
 /**
@@ -115,12 +114,12 @@ public class WebSocketHandlerService implements WebSocketHandler {
 		return false;
 	}
 
-	public boolean pushMessage(ServerMessage serverMessage) {
-		if(serverMessage != null) {
-			if(serverMessage.getDestId().equals("all")) {
-				return sendToAll(new TextMessage(serverMessage.getMessage()));
+	public boolean pushMessage(ClientMessage clientMessage) {
+		if(clientMessage != null) {
+			if(clientMessage.getToUserId().equals("all")) {
+				return sendToAll(new TextMessage(clientMessage.getMessage()));
 			}else {
-				return sendToUser(serverMessage.getDestId(), new TextMessage(serverMessage.getMessage()));
+				return sendToUser(clientMessage.getToUserId(), new TextMessage(clientMessage.getMessage()));
 			}
 		}
 		return false;

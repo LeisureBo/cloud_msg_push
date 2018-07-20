@@ -1,6 +1,8 @@
 package com.bo.msgpush;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.annotation.Resource;
 
@@ -11,6 +13,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.amqp.rabbit.core.RabbitTemplate.ReturnCallback;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.bo.common.utils.JsonUtils;
@@ -24,7 +27,12 @@ import com.bo.msgpush.service.WebSocketHandlerService;
 @SpringBootTest
 public class CloudMsgPushApplicationTests {
 
+	// 通过RabbitTemplate发送的消息默认持久化
 	private RabbitTemplate rabbitTemplate;
+	
+	// 通过spring stomp websocket发送到mq的消息非持久化
+	@Resource
+	private SimpMessagingTemplate simpMessagingTemplate;
 	
 	@Resource
 	private RedisClientService redisClientService;
@@ -61,11 +69,17 @@ public class CloudMsgPushApplicationTests {
 	@Test
 	public void sendMsgToStompBroker() throws IOException {
 		ClientMessage clientMessage = new ClientMessage();
-		clientMessage.setMessage("System Info: Goodnight Everyone!");
+		clientMessage.setMessage("System Info: Good evening everyone!");
 		clientMessage.setFromUserId("System");
 		clientMessage.setToUserId("21");
-		rabbitTemplate.convertAndSend("amq.topic", "notice", JsonUtils.toJson(clientMessage));
-		System.in.read();
+		Map<String, Object> headers = new HashMap<String, Object>();
+		headers.put("persistent", true);
+		for(int i=1; i<100;i++) {
+			clientMessage.setMessage("system info: " + i);
+//			rabbitTemplate.convertAndSend("amq.topic", "msg.Lily", JsonUtils.toJson(clientMessage));
+			simpMessagingTemplate.convertAndSend("/topic/msg.Money", clientMessage, headers);
+		}
+//		System.in.read();
 	}
 	
 

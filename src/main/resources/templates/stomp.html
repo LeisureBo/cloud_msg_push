@@ -3,17 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>websocket test</title>
-<script th:src="@{js/sockjs.min.js}"></script>
+<script th:src="@{js/sockjs.js}"></script>
 <script th:src="@{js/stomp.js}"></script>
 <script th:src="@{js/jquery-3.1.1.js}"></script>
 <script type="text/javascript">
 	
+	var server_path = "http://127.0.0.1:8100/msgpush/stomp";
+	//var server_path = "http://127.0.0.1:8101/stomp";
 	var socket = null;
 	var stompClient = null;
 	var users = null;
 	var currentUser = null;
-
 	$(document).ready(function(){
+		if(!window.WebSocket) {
+			alert('Your browser does not support WebSockets.');
+		}
 		// 初始化随机用户集合
 		initUsers();
 		// 初始化页面
@@ -25,16 +29,16 @@
 		disconnect();
 		alert("Handler for .unload() called.");
 	});
-
+	
 	function connect() {
 		// SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
-		socket = new SockJS("http://127.0.0.1:8100/msgpush/stomp");// 连接SockJS的endpoint
+		socket = new SockJS(server_path);// 连接SockJS的endpoint
 		// socketHandler();
 		stompClient = Stomp.over(socket);// 使用STMOP子协议的WebSocket客户端
 		// client will send heartbeats every 20000ms
-		stompClient.heartbeat.outgoing = 20000;
+		stompClient.heartbeat.outgoing = 25000;
 		// client does not want to receive heartbeats from the server with config 0
-		stompClient.heartbeat.incoming = 20000;
+		stompClient.heartbeat.incoming = 25000;
 		// 向服务器发起websocket连接并发送CONNECT帧
 		stompClient.connect(
 		// 携带stomp header信息
@@ -45,18 +49,60 @@
 		function connectCallback(frame) {
 			// 显示聊天室信息
 			setConnected(true);
-			// 订阅服务器广播消息
-			stompClient.subscribe("/topic/notice", function(response) {
+			// 获取sessionId
+			var sessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
+			console.log("session Id: " + sessionId);
+			
+			// 订阅服务器广播消息 -> 取消订阅:topic_sub.unsubscribe();
+			var topic_sub = stompClient.subscribe("/topic/notice", function(response) {
 				showNotice(JSON.parse(response.body).message);
-			});
-			// 订阅发送到当前用户的P2P消息
-			stompClient.subscribe("/user/topic/msg", function(response) {///user/exchange/amq.direct/msg
+				// 订阅时指定了ack请求头所以此处必须调用ack()进行消息确认(否则对应的服务端队列将不会删除该消息,可重复消费)
+				response.ack();
+			},{ack: 'client'});
+			
+			// 订阅发送到当前用户的P2P消息 -> 取消订阅:user_sub.unsubscribe();
+			var user_sub = stompClient.subscribe("/user/msg", function(response) {// /user/topic/msg
 				showNotice(JSON.parse(response.body).message);
-			});
-			// 订阅消息发送处理出错的消息
-			stompClient.subscribe("/user/topic/error", function(response) {
+				// 订阅时指定了ack请求头所以此处必须调用ack()进行消息确认(否则对应的服务端队列将不会删除该消息,重新连接时可重复消费)
+				//console.log(response.headers['delivery-tag']);
+				/**
+				 * 任何客户端帧(除了CONNECT帧)都可以为receipt header指定任何值
+				 * 这会让服务端应答带有RECEIPT的帧给客户端(包含receipt-id header,它的值为client frame中receipt header的值)
+				 */
+				//var ack_tx = stompClient.begin();
+				response.ack({receipt: 'my-receipt', testInfo: 'test'});// ack可附加头部信息 -> 后台在HeaderAccessor的nativeHeaders中获取
+				//ack_tx.commit();
+				/* 使用nack()方法请注意:
+				 * 如果nack这条消息则消息会重新入队可能被其他消费者消费;
+				 * 如果没有其他消费者则当前客户端会重复收到该消息直到ack;
+				 * 如果在ack方法之后使用nack则ack无效;
+				 * 另外:客户端如果多次应答同一个或未知的传递标签，RabbitMQ将报PRECONDITION_FAILED - unknown delivery tag 100此类的错误信息
+				 *
+				 * 在以下情况下，rabbitmq会对消息进行重新投递：
+				 * 1.client 未响应ACK, 主动关闭 Channel;
+				 * 2.client 未响应ACk, 网络异常断开;
+				 */
+				//response.nack();
+				
+				/**
+				* 注：SUBSCRIBE帧的ack头模式说明:
+				* 1.{ack: 'client'}
+				* ack具有累积效应，譬如接收了10条消息，如果你ack了第8条消息，那么1-7条消息都会被ack，只有9-10两条消息还保持未ack状态
+				* 2.{ack: 'client-individual'}
+				* ack为独立确认模式，只确认当前调用ack的消息不会影响其他消息，在订阅回调接口中大量接收单条消息使用
+				* 3.auto(默认) 自动确认
+				*/
+			},{ack: 'client-individual'});
+			
+			// 订阅消息发送处理出错的消息(使用自定义持久化队列无需订阅此地址使用p2p消息队列即可)
+/* 			var error_sub = stompClient.subscribe("/user/error", function(response) {// /user/topic/error
 				showNotice(JSON.parse(response.body).message);
-			});
+			}); */
+			
+			// 测试用例
+/*  		stompClient.subscribe("/queue/test", function(response) {
+				showNotice(JSON.parse(response.body).message);
+			}); */
 		},
 		// 连接失败回调函数
 		function errorCallBack(error) {
@@ -67,9 +113,13 @@
 			if (socket != null) {
 				socket.close();
 			}
-			showNotice("Connected error ...");
+			showNotice("connected error ...");
 			alert("connected error");
 		});
+		// 服务端返回ack接收消息回调
+		stompClient.onreceipt = function(frame){
+			//console.log("onreceipt: " + frame.headers + frame.body);
+		}
 	}
 
 	function disconnect() {
@@ -123,7 +173,15 @@
 			"message" : msg
 		};
 		console.log(clientMessage);
-		stompClient.send("/app/send-msg", {}, JSON.stringify(clientMessage));
+		// 自定义消息头(必须直接发送到消息代理目的地才有效,如果发送至@MessageMapping注解方法则需要在后台程序中设置)
+		var headers = {
+			//priority:0,// 消息优先级
+			persistent:true, // 消息是否持久化
+			other:'custom' // 自定义消息标识,可用于订阅端消息过滤
+		}
+		//stompClient.send("/app/send-msg", {}, JSON.stringify(clientMessage));
+		stompClient.send("/app/send-topq", headers, JSON.stringify(clientMessage));
+		//stompClient.send("/amq/queue/user-Xiong", headers, JSON.stringify(clientMessage));
 		$("#notice").val('');
 	}
 
@@ -170,7 +228,7 @@
 		users[9] = 'Bo';
 		// 初始化当前用户
 		currentUser = getRandomUser();
-		//currentUser = 'bo';
+		//currentUser = 'Tom';
 	}
 
 	/** 获取0~max范围内的随机整数 */

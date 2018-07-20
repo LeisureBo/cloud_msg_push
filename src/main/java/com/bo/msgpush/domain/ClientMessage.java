@@ -6,21 +6,52 @@ package com.bo.msgpush.domain;
 import java.io.Serializable;
 
 /**
- * @notes 
+ * @notes 测试消息模型
  * 
  * @author wangboc
  * 
  * @version 2018年7月6日 下午3:10:03
  */
-public class ClientMessage implements Serializable{
+public class ClientMessage implements Serializable {
 
 	private static final long serialVersionUID = -3762030427845178224L;
-	
+
+	private String type;
+
 	private String fromUserId;
-	
+
 	private String toUserId;
-	
+
 	private String message;
+
+	
+	public ClientMessage() {
+		super();
+	}
+
+	public ClientMessage(String message) {
+		this.message = message;
+	}
+	
+	public ClientMessage(String type, String message) {
+		this.type = type;
+		this.message = message;
+	}
+	
+	/**
+	 * @return the type
+	 */
+	public String getType() {
+		return type;
+	}
+
+	/**
+	 * @param type
+	 *            the type to set
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
 
 	/**
 	 * @return the fromUserId
@@ -30,7 +61,8 @@ public class ClientMessage implements Serializable{
 	}
 
 	/**
-	 * @param fromUserId the fromUserId to set
+	 * @param fromUserId
+	 *            the fromUserId to set
 	 */
 	public void setFromUserId(String fromUserId) {
 		this.fromUserId = fromUserId;
@@ -44,7 +76,8 @@ public class ClientMessage implements Serializable{
 	}
 
 	/**
-	 * @param toUserId the toUserId to set
+	 * @param toUserId
+	 *            the toUserId to set
 	 */
 	public void setToUserId(String toUserId) {
 		this.toUserId = toUserId;
@@ -58,19 +91,17 @@ public class ClientMessage implements Serializable{
 	}
 
 	/**
-	 * @param message the message to set
+	 * @param message
+	 *            the message to set
 	 */
 	public void setMessage(String message) {
 		this.message = message;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
-		return "ClientMessage [fromUserId=" + fromUserId + ", toUserId=" + toUserId + ", message=" + message + "]";
+		return "ClientMessage [type=" + type + ", fromUserId=" + fromUserId + ", toUserId=" + toUserId + ", message="
+				+ message + "]";
 	}
-	
-	
+
 }

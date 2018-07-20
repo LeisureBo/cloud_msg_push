@@ -21,6 +21,12 @@ public class ConfirmCallbackListener implements RabbitTemplate.ConfirmCallback {
 
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
+	/**
+	 * 1.echange存在时,routeKey路由无论是否存在,ack为true 
+	 * 2.echange不存在时,ack为false。
+	 * 3.当exchange为null或者空字符串时,ack为true 
+	 * 4.网络中断会导致无confirm
+	 */
 	@Override
 	public void confirm(CorrelationData correlationData, boolean ack, String cause) {
 		if(!ack) {

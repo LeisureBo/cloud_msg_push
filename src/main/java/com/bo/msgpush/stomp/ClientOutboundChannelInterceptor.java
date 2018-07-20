@@ -46,7 +46,6 @@ public class ClientOutboundChannelInterceptor implements ChannelInterceptor {
 
 	@Override
 	public void postSend(Message<?> message, MessageChannel channel, boolean sent) {
-
 		StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 		if (accessor != null && accessor.getCommand() != null) {
 			switch (accessor.getCommand()) {
@@ -68,5 +67,5 @@ public class ClientOutboundChannelInterceptor implements ChannelInterceptor {
 			}
 		}
 	}
-
+	
 }
