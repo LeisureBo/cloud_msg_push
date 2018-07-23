@@ -41,17 +41,33 @@ public class StompClientController {
 	@Value("${push.exchange.topic}")
 	private String topicExchange;// 广播消息交换机
 	
+	@Value("${push.exchange.operation}")
+	private String operExchange;// 运营消息交换机
+	
 	@Value("${push.exchange.user}")
 	private String userExchange;// p2p消息交换机
 	
-	@Value("${push.suffix.sub.uer}")
+	@Value("${push.suffix.sub.user}")
 	private String userSubSuffix;// p2p消息订阅后缀
+	
+	@Resource
+	private SimpUserRegistry simpUserRegistry;
 	
 	@Resource
 	private SimpMessagingTemplate simpMessagingTemplate;
 	
-	@Resource
-	private SimpUserRegistry simpUserRegistry;
+	@MessageMapping("/send_tms")
+	public OperMessage sendTopicMsg(OperMessage operMessage, Principal principal) {
+		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] Topic消息：" + operMessage);
+		Map<String, Object> headers = new HashMap<>();
+		if(operMessage.getMsgHeader() != null) {
+			headers.put("persistent", operMessage.getMsgHeader().getPersistent());
+			headers.put("priority", operMessage.getMsgHeader().getPriority());
+		}
+		String destination = "/exchange/" + topicExchange + "/" + operMessage.getRoutingKey();
+		simpMessagingTemplate.convertAndSend(destination, operMessage, headers);
+		return operMessage;
+	}
 	
 	@MessageMapping("/send_oms")
 	public OperMessage sendOperMsg(OperMessage operMessage, Principal principal) {
@@ -61,7 +77,7 @@ public class StompClientController {
 			headers.put("persistent", operMessage.getMsgHeader().getPersistent());
 			headers.put("priority", operMessage.getMsgHeader().getPriority());
 		}
-		String destination = "/exchange/" + topicExchange + "/" + operMessage.getRoutingKey();
+		String destination = "/exchange/" + operExchange + "/" + operMessage.getRoutingKey();
 		simpMessagingTemplate.convertAndSend(destination, operMessage, headers);
 		return operMessage;
 	}

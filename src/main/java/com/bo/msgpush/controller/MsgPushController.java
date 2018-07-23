@@ -37,16 +37,32 @@ public class MsgPushController {
 	@Value("${push.exchange.topic}")
 	private String topicExchange;// 广播消息交换机
 	
+	@Value("${push.exchange.operation}")
+	private String operExchange;// 运营消息交换机
+	
 	@Value("${push.exchange.user}")
 	private String userExchange;// p2p消息交换机
 	
-	@Value("${push.suffix.sub.uer}")
+	@Value("${push.suffix.sub.user}")
 	private String userSubSuffix;// p2p消息订阅后缀
 	
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 	
 	@Resource
 	private RabbitTemplate rabbitTemplate;
+	
+	
+	@PostMapping("/send_tms")
+	public ProcessResult sendTopicMsg(@RequestBody OperMessage operMessage) {
+		ProcessResult processResult = new ProcessResult();
+		try {
+			rabbitTemplate.convertAndSend(topicExchange, operMessage.getRoutingKey(), operMessage);
+		} catch (AmqpException e) {
+			processResult.setRetCode(-1);
+			logger.error("sendTopicMsg error", e);
+		}
+		return processResult;
+	}
 	
 	@PostMapping("/send_oms")
 	public ProcessResult sendOperMsg(@RequestBody OperMessage operMessage) {
@@ -63,7 +79,7 @@ public class MsgPushController {
 				}
 			};
 			// rabbitTemplate发送消息默认持久化
-			rabbitTemplate.convertAndSend(topicExchange, operMessage.getRoutingKey(), operMessage);
+			rabbitTemplate.convertAndSend(operExchange, operMessage.getRoutingKey(), operMessage);
 		} catch (AmqpException e) {
 			processResult.setRetCode(-1);
 			logger.error("sendOperMsg error", e);

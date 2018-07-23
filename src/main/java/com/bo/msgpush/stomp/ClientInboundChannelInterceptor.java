@@ -44,11 +44,17 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	@Value("${push.exchange.topic}")
 	private String topicExchange;// 广播消息交换机 "amq.topic"
 	
+	@Value("${push.exchange.operation}")
+	private String operExchange;// 运营消息交换机 "amq.topic"
+	
 	@Value("${push.exchange.user}")
 	private String userExchange;// p2p消息交换机 "amq.topic"
     
 	@Value("${push.prefix.sub.topic}")
     private String topicSubPrefix;// 广播消息订阅前缀 "/topic/"
+	
+	@Value("${push.prefix.sub.operation}")
+	private String operSubPrefix;// 运营消息订阅前缀 "/oper/"
     
     @Value("${push.prefix.sub.user}")
     private String userSubPrefix;// p2p消息订阅前缀 "/user/"
@@ -198,18 +204,22 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	private void configSubDest(StompHeaderAccessor accessor) {
 		// 获取订阅路径
 		String subDest = accessor.getDestination();
-		// 订阅前缀校验
-		if (StringUtils.isBlank(subDest) || (!subDest.startsWith(topicSubPrefix) && !subDest.startsWith(userSubPrefix))) {
+		// 订阅前缀校验  topic订阅前缀不过滤  消息队列非持久化且自动删除(端开链接或取消订阅)
+		if(subDest.startsWith(topicSubPrefix)) {
+			return;
+		}
+		// 其他订阅前缀绑定到持久化消息队列
+		if (StringUtils.isBlank(subDest) || (!subDest.startsWith(operSubPrefix) && !subDest.startsWith(userSubPrefix))) {
 			throw new RuntimeException("Illegal subscription path '" + subDest + "'");
 		}
-		boolean isTopicSub = subDest.startsWith(topicSubPrefix);
+		boolean isOperSub = subDest.startsWith(operSubPrefix);
 		// 获取用户标识
 		String userId = accessor.getUser().getName();
-		String subPrefix = isTopicSub ? topicSubPrefix : userSubPrefix;
+		String subPrefix = isOperSub ? operSubPrefix : userSubPrefix;
 		String subSuffix = subDest.substring(subPrefix.length());
 		String queueName = subPrefix.substring(1, subPrefix.length() - 1) + "-" + userId;
-		String routingKey = isTopicSub ? subSuffix : subSuffix + "." + userId;
-		String exchange = isTopicSub ? topicExchange : userExchange;
+		String routingKey = isOperSub ? subSuffix : subSuffix + "." + userId;
+		String exchange = isOperSub ? operExchange : userExchange;
 		// 基于routingkey以及queueName创建一个持久化订阅队列
 		/**
 		 * To-Do:
