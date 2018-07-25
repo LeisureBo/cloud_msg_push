@@ -79,8 +79,8 @@ public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 		.setSystemLogin(username).setSystemPasscode(password) // 源自服务端的连接的认证信息.默认:guest/guest
 		.setUserRegistryBroadcast("/topic/simp-user-registry")// 当有用户注册时将其广播到其他服务器
 		.setUserDestinationBroadcast("/topic/unresolved-user-destination")// 将当前服务端点无法发送到user dest的消息广播到其他服务端点处理
-		.setSystemHeartbeatReceiveInterval(15000) // 配置服务端session接收stomp消息代理心跳时间间隔(0代表不接收)
-		.setSystemHeartbeatSendInterval(15000); // 配置服务端session向stomp消息代理发送心跳时间间隔(0代表不接收)
+		.setSystemHeartbeatReceiveInterval(15000) // 配置服务端websocket会话接收stomp消息代理心跳时间间隔(0代表不接收)
+		.setSystemHeartbeatSendInterval(15000); // 配置服务端websocket会话向stomp消息代理发送心跳时间间隔(0代表不接收)
 		// 配置服务端接收消息的地址前缀与@MessageMapping路径组合使用
 		registry.setApplicationDestinationPrefixes("/app");
 		// 配置点对点使用的订阅前缀，默认是"/user" 例如：(@link org.springframework.messaging.simp.user.DefaultUserDestinationResolver)
