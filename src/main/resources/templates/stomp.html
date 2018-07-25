@@ -100,9 +100,9 @@
 			}); */
 			
 			// 测试用例
-/*  		stompClient.subscribe("/queue/test", function(response) {
+  			stompClient.subscribe("/user/queue/test", function(response) {
 				showNotice(JSON.parse(response.body).message);
-			}); */
+			});
 		},
 		// 连接失败回调函数
 		function errorCallBack(error) {

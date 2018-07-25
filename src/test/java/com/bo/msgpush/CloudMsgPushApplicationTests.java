@@ -74,13 +74,14 @@ public class CloudMsgPushApplicationTests {
 		clientMessage.setToUserId("21");
 		Map<String, Object> headers = new HashMap<String, Object>();
 		headers.put("persistent", true);
-		for(int i=1; i<100;i++) {
+		for(int i=1; i<6;i++) {
 			clientMessage.setMessage("system info: " + i);
 //			rabbitTemplate.convertAndSend("amq.topic", "msg.Lily", JsonUtils.toJson(clientMessage));
-			simpMessagingTemplate.convertAndSend("/topic/msg.Money", clientMessage, headers);
+//			rabbitTemplate.convertAndSend("test", JsonUtils.toJson(clientMessage));// 发送到默认交换机，路由键为队列名称
+//			simpMessagingTemplate.convertAndSend("/queue/test", clientMessage, headers);
+			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/test", clientMessage, headers);
 		}
 //		System.in.read();
 	}
-	
 
 }
