@@ -1,6 +1,5 @@
 package com.bo.msgpush.stomp;
 
-import java.io.IOException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -9,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import org.apache.commons.lang3.StringUtils;
@@ -51,7 +51,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	private String operExchange;// 运营消息交换机 "amq.topic"
 	
 	@Value("${push.exchange.user}")
-	private String userExchange;// p2p消息交换机 "amq.topic"
+	private String userExchange;// p2p消息交换机 "amq.direct"
     
 	@Value("${push.prefix.sub.topic}")
     private String topicSubPrefix;// 广播消息订阅前缀 "/topic/"
@@ -73,6 +73,14 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
     
 	@Resource
 	private ConnectionFactory connectionFactory;
+	
+	private Set<String> excludePrefixSet;
+	
+	@PostConstruct
+	public void init() {
+		String[] excludePrefixArr = StringUtils.split(excludePrefixs, ",");
+		excludePrefixSet = new HashSet<>(Arrays.asList(excludePrefixArr));
+	}
 	
 	/**
 	 * 客户端入站消息前置处理
@@ -107,7 +115,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		            break;
 		        case SUBSCRIBE:
 		        	// 用户订阅请求前置处理..防止用户订阅不合法频道..
-//		        	configSubDest(accessor);
+		        	this.configSubDest(accessor);
 		        	break;
 		        case UNSUBSCRIBE:
 		        	// 用户取消订阅请求前置处理..防止用户订阅不合法频道..
@@ -211,42 +219,38 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		// 获取订阅路径
 		String subDest = accessor.getDestination();
 		// 校验订阅目的地
-		if(!isLegalSubDest(subDest)) {
+		String subPrefix = verifySubDest(subDest);
+		if(StringUtils.isBlank(subPrefix)) {
 			throw new RuntimeException("Illegal subscription path '" + subDest + "'");
 		}
-		// 获取订阅前缀
-		int prefixEnd = subDest.indexOf("/", 1);
-		if(prefixEnd == -1) {
-			prefixEnd = subDest.length() - 1;
-		}
-		String subPrefix = subDest.substring(0, prefixEnd + 1);
-		// 排除不需要过滤的订阅前缀
-		if(isExcludeSubPrefix(subPrefix)) {
+		// 排除不需要拦截的订阅前缀
+		if(excludePrefixSet.contains(subPrefix)) {
 			return;
 		}
-		// 其他订阅前缀绑定到持久化消息队列
-		if ((!subDest.startsWith(operSubPrefix) && !subDest.startsWith(userSubPrefix))) {
+		boolean isOperSub = operSubPrefix.equals(subPrefix);
+		boolean isUserSub = userSubPrefix.equals(subPrefix);
+		// 拦截其他非自定义前缀
+		if (!isOperSub && !isUserSub) {
 			throw new RuntimeException("Illegal subscription path '" + subDest + "'");
 		}
-		boolean isOperSub = subDest.startsWith(operSubPrefix);
 		String userId = accessor.getUser().getName();// 获取用户标识
 		String subSuffix = subDest.substring(subPrefix.length());
 		String queueName = subPrefix.substring(1, subPrefix.length() - 1) + "-" + userId;
 		String routingKey = isOperSub ? subSuffix : subSuffix + "." + userId;
 		String exchange = isOperSub ? operExchange : userExchange;
-		// 基于routingkey以及queueName创建一个持久化订阅队列
 		/**
 		 * To-Do:
 		 * 1.每次订阅都会增加一个通道连接，当并发量很大时是否存在问题？
 		 * 2.持久化队列中允许缓存的未被确认的消息数量设置多少合适?
 		 */
+		// 基于routingkey以及queueName创建一个持久化订阅队列
 		try {
 			Channel channel = connectionFactory.createConnection().createChannel(false);
 			Map<String, Object> args = new HashMap<String, Object>();
 			args.put("x-message-ttl", 60000);// 设置队列消息过期时间(ms)
 			args.put("x-expires", 1800000);// 设置队列过期时间(ms)
 			channel.queueDeclare(queueName, true, false, false, null);// 第5个参数设置队列属性
-			channel.basicQos(5, true);// 设置每个消费者每次抓取的未ack消息最大数量(只有在stomp客户端设置为ack应答有效)
+			channel.basicQos(5, false);// 设置每个消费者每次抓取的未ack消息最大数量(只有在stomp客户端设置为ack应答有效)
 			channel.queueBind(queueName, exchange, routingKey);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -267,27 +271,21 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	/**
 	 * 订阅目的地合法性校验
 	 * 
-	 * @param subDest
-	 * @return
+	 * @param subDest 订阅地址
+	 * 
+	 * @return 订阅前缀
 	 */
-	private boolean isLegalSubDest(String subDest) {
+	private String verifySubDest(String subDest) {
 		// 校验订阅路径
-		if(StringUtils.isBlank(subDest) || !subDest.startsWith("/")) {
-			return false;
+		if (StringUtils.isBlank(subDest) || !subDest.startsWith("/")) {
+			return "";
 		}
-		return true;
+		// 获取订阅前缀
+		int prefixEnd = subDest.indexOf("/", 1);
+		if (prefixEnd == -1) {
+			prefixEnd = subDest.length() - 1;
+		}
+		return subDest.substring(0, prefixEnd + 1);
 	}
 	
-	/**
-	 * 校验订阅前缀是否需要排除
-	 * 
-	 * @param prefix
-	 * @return
-	 */
-	private boolean isExcludeSubPrefix(String subPrefix) {
-		String[] excludePrefixArr = StringUtils.split(excludePrefixs, ",");
-		Set<String> excludePrefixSet = new HashSet<>(Arrays.asList(excludePrefixArr));
-		return excludePrefixSet.contains(subPrefix);
-	}
-    
 }

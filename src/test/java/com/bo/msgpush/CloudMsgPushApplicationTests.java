@@ -30,7 +30,7 @@ public class CloudMsgPushApplicationTests {
 	// 通过RabbitTemplate发送的消息默认持久化
 	private RabbitTemplate rabbitTemplate;
 	
-	// 通过spring stomp websocket发送到mq的消息非持久化
+	// 通过spring stomp websocket发送到mq的消息默认非持久化
 	@Resource
 	private SimpMessagingTemplate simpMessagingTemplate;
 	
@@ -77,9 +77,9 @@ public class CloudMsgPushApplicationTests {
 		for(int i=1; i<6;i++) {
 			clientMessage.setMessage("system info: " + i);
 //			rabbitTemplate.convertAndSend("amq.topic", "msg.Lily", JsonUtils.toJson(clientMessage));
-//			rabbitTemplate.convertAndSend("test", JsonUtils.toJson(clientMessage));// 发送到默认交换机，路由键为队列名称
+			rabbitTemplate.convertAndSend("stomp-subscription-wD_WPz0YtxNUlNdM25efTg", JsonUtils.toJson(clientMessage));// 发送到默认交换机，路由键为队列名称
 //			simpMessagingTemplate.convertAndSend("/queue/test", clientMessage, headers);
-			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/test", clientMessage, headers);
+//			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/test", clientMessage, headers);
 		}
 //		System.in.read();
 	}

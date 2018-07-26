@@ -31,14 +31,14 @@
 	});
 	
 	function connect() {
-		// SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
-		socket = new SockJS(server_path);// 连接SockJS的endpoint
-		// socketHandler();
-		stompClient = Stomp.over(socket);// 使用STMOP子协议的WebSocket客户端
+		// 连接SockJS的endpoint：SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
+		socket = new SockJS(server_path);
+		// 使用STMOP子协议的WebSocket客户端
+		stompClient = Stomp.over(socket);
 		// client will send heartbeats every 20000ms
-		stompClient.heartbeat.outgoing = 25000;
+		stompClient.heartbeat.outgoing = 24000;
 		// client does not want to receive heartbeats from the server with config 0
-		stompClient.heartbeat.incoming = 25000;
+		stompClient.heartbeat.incoming = 24000;
 		// 向服务器发起websocket连接并发送CONNECT帧
 		stompClient.connect(
 		// 携带stomp header信息
@@ -58,10 +58,10 @@
 				showNotice(JSON.parse(response.body).message);
 				// 订阅时指定了ack请求头所以此处必须调用ack()进行消息确认(否则对应的服务端队列将不会删除该消息,可重复消费)
 				response.ack();
-			},{ack: 'client'});
+			},{ack: 'client-individual'});
 			
 			// 订阅发送到当前用户的P2P消息 -> 取消订阅:user_sub.unsubscribe();
-			var user_sub = stompClient.subscribe("/user/msg", function(response) {// /user/topic/msg
+			var user_sub = stompClient.subscribe("/p2p/msg", function(response) {// /user/topic/msg
 				showNotice(JSON.parse(response.body).message);
 				// 订阅时指定了ack请求头所以此处必须调用ack()进行消息确认(否则对应的服务端队列将不会删除该消息,重新连接时可重复消费)
 				//console.log(response.headers['delivery-tag']);
@@ -94,15 +94,15 @@
 				*/
 			},{ack: 'client-individual'});
 			
-			// 订阅消息发送处理出错的消息(使用自定义持久化队列无需订阅此地址使用p2p消息队列即可)
+			// 订阅消息发送处理出错的消息(使用自定义订阅前缀无需订阅此地址使用p2p消息队列即可)
 /* 			var error_sub = stompClient.subscribe("/user/error", function(response) {// /user/topic/error
 				showNotice(JSON.parse(response.body).message);
 			}); */
 			
-			// 测试用例
-  			stompClient.subscribe("/user/queue/test", function(response) {
+/* 			// 测试用例
+  			stompClient.subscribe("/queue/test", function(response) {
 				showNotice(JSON.parse(response.body).message);
-			});
+			}); */
 		},
 		// 连接失败回调函数
 		function errorCallBack(error) {
@@ -132,27 +132,6 @@
 		setConnected(false);
 	}
 
-	/** websocket消息处理 
-	 *  JS使用：var socket = new WebSocket(url);
-	 */
-	function socketHandler() {
-		socket.onopen = function() {
-			alert(1);
-			console.log("------连接成功------");
-		};
-		socket.onmessage = function(event) {
-			console.log("-----Received: " + event.data);
-		};
-		socket.onclose = function(event) {
-			console.log("------连接关闭------");
-		};
-		//连接发生错误
-		socket.onerror = function() {
-			console.log("连接错误", "网络超时或通讯地址错误.");
-			// disconnect();
-		};
-	}
-
 	function sendNotice() {
 		var notice = $("#notice").val();
 		var clientMessage = {
@@ -180,7 +159,7 @@
 			other:'custom' // 自定义消息标识,可用于订阅端消息过滤
 		}
 		//stompClient.send("/app/send-msg", {}, JSON.stringify(clientMessage));
-		stompClient.send("/app/send-topq", headers, JSON.stringify(clientMessage));
+		stompClient.send("/app/send-custom", headers, JSON.stringify(clientMessage));
 		//stompClient.send("/amq/queue/user-Xiong", headers, JSON.stringify(clientMessage));
 		$("#notice").val('');
 	}

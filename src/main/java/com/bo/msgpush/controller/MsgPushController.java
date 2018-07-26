@@ -72,7 +72,9 @@ public class MsgPushController {
 			MessagePostProcessor postProcessor = new MessagePostProcessor() {
 				@Override
 				public Message postProcessMessage(Message message) throws AmqpException {
-					message.getMessageProperties().setPriority(4);
+					// JMS标准中约定priority可以为0~9的数值，值越大表示权重越高，默认值为4
+					// RabbitMQ中：The message priority field is defined as an unsigned byte, so in practice priorities should be between 0 and 255.
+					message.getMessageProperties().setPriority(4);// rabbitmq中消息优先级默认值为0，范围0~255
 					message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
 					// ...
 					return message;
