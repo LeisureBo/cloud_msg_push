@@ -106,15 +106,16 @@
 		},
 		// 连接失败回调函数
 		function errorCallBack(error) {
-			// 连接失败时(服务器响应 ERROR帧的回调方法
+			// 连接失败时(服务器响应 ERROR帧的回调方法)
 			if (stompClient != null) {
 				stompClient.disconnect();
 			}
 			if (socket != null) {
 				socket.close();
 			}
+			console.log("disconnected time: " + new Date());
 			showNotice("connected error ...");
-			alert("connected error");
+			//alert("connected error");
 		});
 		// 服务端返回ack接收消息回调
 		stompClient.onreceipt = function(frame){
@@ -177,7 +178,8 @@
 			// 设置欢迎语
 			$("#greeting").prepend(currentUser + ': ');
 			// 通知页面链接成功
-			showNotice("Connected success ...");
+			showNotice("connected success ...");
+			console.log("connected time: " + new Date());
 		} else {
 			$("#greeting").html('欢迎来到聊天室 ~');
 		}
