@@ -49,5 +49,13 @@ public class MessageHeader implements Serializable {
 	public void setPersistent(boolean persistent) {
 		this.persistent = persistent;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "MessageHeader [priority=" + priority + ", persistent=" + persistent + "]";
+	}
 	
 }

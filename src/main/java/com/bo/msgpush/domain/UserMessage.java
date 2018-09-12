@@ -68,14 +68,12 @@ public class UserMessage extends AbsMessage {
 		this.unread = unread;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
+	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "UserMessage [originUid=" + originUid + ", targetUid=" + targetUid + ", unread=" + unread + "]";
+		return "UserMessage [originUid=" + originUid + ", targetUid=" + targetUid + ", unread=" + unread + ", toString()=" + super.toString() + "]";
 	}
 
 }

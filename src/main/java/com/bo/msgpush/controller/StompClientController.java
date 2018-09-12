@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import com.bo.msgpush.domain.AbsMessage;
 import com.bo.msgpush.domain.MessageBody;
 import com.bo.msgpush.domain.OperMessage;
+import com.bo.msgpush.domain.TopicMessage;
 import com.bo.msgpush.domain.UserMessage;
 
 /**
@@ -57,21 +58,21 @@ public class StompClientController {
 	private SimpMessagingTemplate simpMessagingTemplate;
 	
 	@MessageMapping("/send_tms")
-	public OperMessage sendTopicMsg(OperMessage operMessage, Principal principal) {
-		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] Topic消息：" + operMessage);
+	public TopicMessage sendTopicMsg(TopicMessage topicMessage, Principal principal) {
+		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] client topic msg: " + topicMessage);
 		Map<String, Object> headers = new HashMap<>();
-		if(operMessage.getMsgHeader() != null) {
-			headers.put("persistent", operMessage.getMsgHeader().getPersistent());
-			headers.put("priority", operMessage.getMsgHeader().getPriority());
+		if(topicMessage.getMsgHeader() != null) {
+			headers.put("persistent", topicMessage.getMsgHeader().getPersistent());
+			headers.put("priority", topicMessage.getMsgHeader().getPriority());
 		}
-		String destination = "/exchange/" + topicExchange + "/" + operMessage.getRoutingKey();
-		simpMessagingTemplate.convertAndSend(destination, operMessage, headers);
-		return operMessage;
+		String destination = "/exchange/" + topicExchange + "/" + topicMessage.getRoutingKey();
+		simpMessagingTemplate.convertAndSend(destination, topicMessage, headers);
+		return topicMessage;
 	}
 	
 	@MessageMapping("/send_oms")
 	public OperMessage sendOperMsg(OperMessage operMessage, Principal principal) {
-		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] 运营消息：" + operMessage);
+		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] client operation msg: " + operMessage);
 		Map<String, Object> headers = new HashMap<>();
 		if(operMessage.getMsgHeader() != null) {
 			headers.put("persistent", operMessage.getMsgHeader().getPersistent());
@@ -84,7 +85,7 @@ public class StompClientController {
 
 	@MessageMapping("/send_ums")
 	public UserMessage sendUserMsg(UserMessage userMessage, Principal principal) {
-		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] P2P消息：" + userMessage);
+		logger.info("[port: " + appPort + "|online: " + simpUserRegistry.getUserCount() + "] client user msg: " + userMessage);
 		Map<String, Object> headers = new HashMap<>();
 		if(userMessage.getMsgHeader() != null) {
 			headers.put("persistent", userMessage.getMsgHeader().getPersistent());

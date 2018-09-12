@@ -16,7 +16,7 @@ public class OperMessage extends AbsMessage {
 
 	/** 用户可见 (default=False) */
 	private boolean visible;
-	
+
 	/** 消息路由 (required=True) */
 	private String routingKey;
 
@@ -43,18 +43,16 @@ public class OperMessage extends AbsMessage {
 	}
 
 	/**
-	 * @param routingKey the routingKey to set
+	 * @param routingKey
+	 *            the routingKey to set
 	 */
 	public void setRoutingKey(String routingKey) {
 		this.routingKey = routingKey;
 	}
 
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
 	@Override
 	public String toString() {
-		return "OperMessage [visible=" + visible + ", routingKey=" + routingKey + "]";
+		return "OperMessage [visible=" + visible + ", routingKey=" + routingKey + ", toString()=" + super.toString() + "]";
 	}
 
 }

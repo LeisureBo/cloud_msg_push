@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bo.common.domain.ProcessResult;
 import com.bo.msgpush.domain.OperMessage;
+import com.bo.msgpush.domain.TopicMessage;
 import com.bo.msgpush.domain.UserMessage;
 
 
@@ -53,10 +54,10 @@ public class MsgPushController {
 	
 	
 	@PostMapping("/send_tms")
-	public ProcessResult sendTopicMsg(@RequestBody OperMessage operMessage) {
+	public ProcessResult sendTopicMsg(@RequestBody TopicMessage topicMessage) {
 		ProcessResult processResult = new ProcessResult();
 		try {
-			rabbitTemplate.convertAndSend(topicExchange, operMessage.getRoutingKey(), operMessage);
+			rabbitTemplate.convertAndSend(topicExchange, topicMessage.getRoutingKey(), topicMessage);
 		} catch (AmqpException e) {
 			processResult.setRetCode(-1);
 			logger.error("sendTopicMsg error", e);
