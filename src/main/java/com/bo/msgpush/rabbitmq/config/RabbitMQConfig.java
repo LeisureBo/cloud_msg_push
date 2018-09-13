@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Scope;
 
 import com.bo.msgpush.rabbitmq.listener.MessageListener4Common;
 import com.bo.msgpush.rabbitmq.listener.MessageListener4Play;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 /**
@@ -123,8 +124,8 @@ public class RabbitMQConfig {
 	}
 	
 	@Bean
-	public MessageConverter messageConverter() {
-		return new Jackson2JsonMessageConverter();
+	public MessageConverter messageConverter(ObjectMapper customMapper) {
+		return new Jackson2JsonMessageConverter(customMapper);
 	}
 	
 	@Bean // 创建监听器
