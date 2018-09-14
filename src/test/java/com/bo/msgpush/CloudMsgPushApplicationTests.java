@@ -50,8 +50,9 @@ public class CloudMsgPushApplicationTests {
 	@Autowired
 	public void setRabbitTemplate(RabbitTemplate rabbitTemplate) {
 		this.rabbitTemplate = rabbitTemplate;
-		rabbitTemplate.setConfirmCallback(confirmCallback);
-		rabbitTemplate.setReturnCallback(returnCallback);
+		// 回调配置移到#RabbitMQConfig配置类
+//		rabbitTemplate.setConfirmCallback(confirmCallback);
+//		rabbitTemplate.setReturnCallback(returnCallback);
 	}
 
 //	@Test

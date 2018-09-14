@@ -23,8 +23,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 
+import com.bo.msgpush.rabbitmq.listener.ConfirmCallbackListener;
 import com.bo.msgpush.rabbitmq.listener.MessageListener4Common;
 import com.bo.msgpush.rabbitmq.listener.MessageListener4Play;
+import com.bo.msgpush.rabbitmq.listener.ReturnCallBackListener;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -119,7 +121,9 @@ public class RabbitMQConfig {
 	@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE) // 必须是prototype类型(便于不同的消息回调)
 	public RabbitTemplate rabbitTemplate(MessageConverter messageConverter) {
 		RabbitTemplate template = new RabbitTemplate(connectionFactory());
-//		template.setMessageConverter(messageConverter);// 设置消息转换器
+		template.setMessageConverter(messageConverter);// 设置消息转换器
+		template.setConfirmCallback(new ConfirmCallbackListener());
+		template.setReturnCallback(new ReturnCallBackListener());
 		return template;
 	}
 	
