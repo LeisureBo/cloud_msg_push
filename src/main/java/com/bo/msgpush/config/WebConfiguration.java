@@ -79,7 +79,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 		objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 		// 禁用未知字段校验
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-		// 是否忽略transient注解的字段 (默认为false)
+		// 是否忽略transient修饰的字段 (默认为false)
 		objectMapper.configure(MapperFeature.PROPAGATE_TRANSIENT_MARKER, true);
 		return objectMapper;
 	}
