@@ -8,8 +8,10 @@
 <script th:src="@{js/jquery-3.1.1.js}"></script>
 <script type="text/javascript">
 	
-	var server_path = "http://127.0.0.1:8100/msgpush/stomp";
-	//var server_path = "http://127.0.0.1:8101/stomp";
+	var server_path1 = "http://127.0.0.1:8100/msgpush/stomp";
+	var server_path2 = "ws://127.0.0.1:8100/msgpush_ws/stomp_ws";
+	var server_path3 = "http://127.0.0.1:8101/stomp";
+	
 	var socket = null;
 	var stompClient = null;
 	var users = null;
@@ -32,9 +34,14 @@
 	
 	function connect() {
 		// 连接SockJS的endpoint：SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
-		socket = new SockJS(server_path);
-		// 使用STMOP子协议的WebSocket客户端
+		
+		/** 使用sockJs的WebSocket实现 */
+		socket = new SockJS(server_path1);
 		stompClient = Stomp.over(socket);
+		
+		/** 使用原始的websocket实现 */
+		// stompClient = Stomp.client(server_path2);
+		
 		// client will send heartbeats every 20000ms
 		stompClient.heartbeat.outgoing = 24000;
 		// client does not want to receive heartbeats from the server with config 0
@@ -49,10 +56,11 @@
 		function connectCallback(frame) {
 			// 显示聊天室信息
 			setConnected(true);
-			// 获取sessionId
-			var sessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
-			console.log("session Id: " + sessionId);
-			
+			if(socket){
+				// 获取sessionId
+				var sessionId = /\/([^\/]+)\/websocket/.exec(socket._transport.url)[1];
+				console.log("session Id: " + sessionId);
+			}
 			// 订阅服务器广播消息 -> 取消订阅:topic_sub.unsubscribe();
 			var topic_sub = stompClient.subscribe("/topic/notice", function(response) {
 				showNotice(JSON.parse(response.body).message);
