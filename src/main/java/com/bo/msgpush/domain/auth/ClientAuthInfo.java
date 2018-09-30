@@ -1,4 +1,4 @@
-package com.bo.msgpush.domain;
+package com.bo.msgpush.domain.auth;
 
 import java.security.Principal;
 

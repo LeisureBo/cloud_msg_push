@@ -1,7 +1,7 @@
 /**
  * 
  */
-package com.bo.msgpush.domain;
+package com.bo.msgpush.domain.msg;
 
 /**
  * @notes 广播消息

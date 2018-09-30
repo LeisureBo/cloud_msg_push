@@ -16,7 +16,7 @@ import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Controller;
 
-import com.bo.msgpush.domain.ClientMessage;
+import com.bo.msgpush.domain.msg.ClientMessage;
 
 /**
  * @Description stomp客户端消息处理器

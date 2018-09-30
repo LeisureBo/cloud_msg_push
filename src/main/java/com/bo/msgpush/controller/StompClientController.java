@@ -18,11 +18,11 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Controller;
 
-import com.bo.msgpush.domain.AbsMessage;
-import com.bo.msgpush.domain.MessageBody;
-import com.bo.msgpush.domain.OperMessage;
-import com.bo.msgpush.domain.TopicMessage;
-import com.bo.msgpush.domain.UserMessage;
+import com.bo.msgpush.domain.msg.AbsMessage;
+import com.bo.msgpush.domain.msg.MessageBody;
+import com.bo.msgpush.domain.msg.OperMessage;
+import com.bo.msgpush.domain.msg.TopicMessage;
+import com.bo.msgpush.domain.msg.UserMessage;
 
 /**
  * @notes stomp客户端消息发布接口

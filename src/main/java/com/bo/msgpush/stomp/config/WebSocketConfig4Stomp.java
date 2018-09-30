@@ -1,4 +1,4 @@
-package com.bo.msgpush.stomp;
+package com.bo.msgpush.stomp.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +16,11 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
+
+import com.bo.msgpush.stomp.interceptor.ClientHandshakeHandler;
+import com.bo.msgpush.stomp.interceptor.ClientHandshakeInterceptor;
+import com.bo.msgpush.stomp.interceptor.ClientInboundChannelInterceptor;
+import com.bo.msgpush.stomp.interceptor.ClientOutboundChannelInterceptor;
 
 /**
  * @Description springboot整合websocket配置: 基于stomp协议的配置

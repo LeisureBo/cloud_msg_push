@@ -19,9 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bo.common.domain.ProcessResult;
-import com.bo.msgpush.domain.OperMessage;
-import com.bo.msgpush.domain.TopicMessage;
-import com.bo.msgpush.domain.UserMessage;
+import com.bo.msgpush.domain.msg.OperMessage;
+import com.bo.msgpush.domain.msg.TopicMessage;
+import com.bo.msgpush.domain.msg.UserMessage;
 
 
 /**

@@ -1,4 +1,4 @@
-package com.bo.msgpush.stomp;
+package com.bo.msgpush.stomp.interceptor;
 
 import java.security.Principal;
 import java.util.Arrays;
@@ -30,7 +30,7 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
 import com.bo.common.utils.JsonUtils;
-import com.bo.msgpush.domain.ClientAuthInfo;
+import com.bo.msgpush.domain.auth.ClientAuthInfo;
 import com.rabbitmq.client.Channel;
 
 /**

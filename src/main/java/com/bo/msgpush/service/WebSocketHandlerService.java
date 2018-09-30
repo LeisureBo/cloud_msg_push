@@ -22,7 +22,7 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com.bo.common.utils.JsonUtils;
-import com.bo.msgpush.domain.ClientMessage;
+import com.bo.msgpush.domain.msg.ClientMessage;
 import com.bo.msgpush.websocket.WebSocketInterceptor;
 
 /**

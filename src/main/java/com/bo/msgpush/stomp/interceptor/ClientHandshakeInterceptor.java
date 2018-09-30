@@ -1,4 +1,4 @@
-package com.bo.msgpush.stomp;
+package com.bo.msgpush.stomp.interceptor;
 
 import java.util.Map;
 

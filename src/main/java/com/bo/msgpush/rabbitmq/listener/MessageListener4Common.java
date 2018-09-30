@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.rabbitmq.client.Channel;
 import com.bo.common.utils.JsonUtils;
-import com.bo.msgpush.domain.ClientMessage;
+import com.bo.msgpush.domain.msg.ClientMessage;
 import com.bo.msgpush.service.WebSocketHandlerService;
 
 /**

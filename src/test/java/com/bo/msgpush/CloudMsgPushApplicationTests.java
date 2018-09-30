@@ -17,7 +17,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.bo.common.utils.JsonUtils;
-import com.bo.msgpush.domain.ClientMessage;
+import com.bo.msgpush.domain.msg.ClientMessage;
 import com.bo.msgpush.rabbitmq.listener.ConfirmCallbackListener;
 import com.bo.msgpush.rabbitmq.listener.ReturnCallBackListener;
 import com.bo.msgpush.service.RedisClientService;
