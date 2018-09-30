@@ -9,7 +9,7 @@
 <script type="text/javascript">
 	
 	var server_path1 = "http://127.0.0.1:8100/msgpush/stomp";
-	var server_path2 = "ws://127.0.0.1:8100/msgpush_ws/stomp_ws";
+	var server_path2 = "ws://127.0.0.1:8100/msgpush-ws/stomp-ws";
 	var server_path3 = "http://127.0.0.1:8101/stomp";
 	
 	var socket = null;
@@ -36,11 +36,11 @@
 		// 连接SockJS的endpoint：SockJS所处理的URL是 "http://"或 "https://模式，而不是 "ws://"或"wss://"
 		
 		/** 使用sockJs的WebSocket实现 */
-		socket = new SockJS(server_path1);
-		stompClient = Stomp.over(socket);
+		// socket = new SockJS(server_path1);
+		// stompClient = Stomp.over(socket);
 		
 		/** 使用原始的websocket实现 */
-		// stompClient = Stomp.client(server_path2);
+		stompClient = Stomp.client(server_path2);
 		
 		// client will send heartbeats every 20000ms
 		stompClient.heartbeat.outgoing = 24000;
