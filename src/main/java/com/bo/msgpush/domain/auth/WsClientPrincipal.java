@@ -2,6 +2,9 @@ package com.bo.msgpush.domain.auth;
 
 import java.security.Principal;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+
 
 /**
  * @notes 用于stomp保存用户认证信息 {@link org.springframework.messaging.simp.SimpMessageHeaderAccessor#setUser()}
@@ -10,6 +13,8 @@ import java.security.Principal;
  * 
  * @Version 2018年6月28日　上午11:23:50
  */
+// @JsonAutoDetect注解用于com.fasterxml.jackson序列化与反序列化设置属性自动检测规则
+@JsonAutoDetect(fieldVisibility = Visibility.ANY, getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, isGetterVisibility = Visibility.NONE)
 public class WsClientPrincipal implements Principal, java.io.Serializable {
 
 	private static final long serialVersionUID = 2978584580328464624L;
@@ -20,6 +25,13 @@ public class WsClientPrincipal implements Principal, java.io.Serializable {
      * @serial
      */
 	private String clientId;// 客户端标识
+	
+	/**
+	 * The empty constructor
+	 */
+	public WsClientPrincipal() {
+		super();
+	}
 	
 	/**
 	 * Creates a principal.

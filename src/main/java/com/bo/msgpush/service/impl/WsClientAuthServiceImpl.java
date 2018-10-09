@@ -45,25 +45,27 @@ public class WsClientAuthServiceImpl implements WsClientAuthService {
 	@Override
 	public AuthenticationInfo doAuthenticate(AuthenticationToken authToken) throws AuthenticationException {
 		// 判断token是否合法
-		if(authToken != null && authToken instanceof WsClientAuthToken) {
+		if(!(authToken instanceof WsClientAuthToken)) {
 			String msg = "The submitted AuthenticationToken [" + authToken + "] is not supported";
+			logger.error(msg);
 			throw new UnsupportedTokenException(msg);
 		}
 		// 获取认证信息
 		AuthenticationInfo authenticationInfo = null;
 		try {
-			authenticationInfo = restTemplate.postForObject(clientAuthUrl, authToken, AuthenticationInfo.class);
-		} catch (RestClientException e) {
-			logger.error("Failed to get remote authentication information", e);
+			authenticationInfo = restTemplate.postForObject(clientAuthUrl, authToken, WsClientAuthInfo.class);
+		} catch (Exception e) {
+			logger.error("Failed to get remote authentication information: {}", e.getMessage());
 			// 模拟远程获取的认证信息
-			Principal principal = new WsClientPrincipal((String) authToken.getPrincipal());
+			WsClientPrincipal principal = new WsClientPrincipal((String) authToken.getPrincipal());
 			String credentials = (String) authToken.getCredentials();
 			authenticationInfo = new WsClientAuthInfo(principal, credentials);
 		}
 		if(authenticationInfo == null || !(authenticationInfo instanceof WsClientAuthInfo)) {
 			String msg = "Unable to find account data for the " +
                     "submitted AuthenticationToken [" + authToken + "].";
-            throw new UnknownAccountException(msg);
+            logger.error(msg);
+			throw new UnknownAccountException(msg);
 		}
 		return authenticationInfo;
 	}

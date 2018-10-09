@@ -46,12 +46,13 @@
 		stompClient.heartbeat.outgoing = 24000;
 		// client does not want to receive heartbeats from the server with config 0
 		stompClient.heartbeat.incoming = 24000;
+		// 携带的stomp header信息
+		var authHeader = {
+			"uid": currentUser,
+			"token": "1234"
+		}
 		// 向服务器发起websocket连接并发送CONNECT帧
-		stompClient.connect(
-		// 携带stomp header信息
-		{
-			"token" : currentUser // 标识当前客户端,用于认证
-		},
+		stompClient.connect(authHeader,
 		// 连接成功回调函数
 		function connectCallback(frame) {
 			// 显示聊天室信息

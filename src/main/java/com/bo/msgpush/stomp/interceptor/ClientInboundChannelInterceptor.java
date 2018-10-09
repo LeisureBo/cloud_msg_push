@@ -65,6 +65,9 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
     @Value("${push.prefix.broker}")
     private String brokerPrefix;// 消息代理前缀 "/amq/queue/"
     
+    @Value("${push.auth.enable}")
+    private boolean enableAuth;
+    
 	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
     
@@ -98,18 +101,18 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		        	// stomp如何实现单用户多会话连接?
 		        	// 当同一个用户ID在不同终端登录时会生成多个sessionId这时这个userId就会绑定多个sessionId;
 		        	// 每个sessionId绑定着自己的订阅主题,其他用户向其发送消息时会传播到该userId下的所有session
-		        	List<String> uids = accessor.getNativeHeader("uid");
-		        	List<String> tokens = accessor.getNativeHeader("token");
-		        	if(uids != null && !uids.isEmpty() && tokens != null && !tokens.isEmpty()) {
-		        		WsClientAuthToken authToken = new WsClientAuthToken(uids.get(0), tokens.get(0));
+		        	if(enableAuth) {
+			        	List<String> uids = accessor.getNativeHeader("uid");
+			        	List<String> tokens = accessor.getNativeHeader("token");
+			        	String uid = (uids != null && !uids.isEmpty()) ? uids.get(0) : null;
+			        	String token = (tokens != null && !tokens.isEmpty()) ? tokens.get(0) : null;		
+			        	WsClientAuthToken authToken = new WsClientAuthToken(uid, token);
 		        		// 认证失败内部会抛出异常以触发客户端ErrorCallback回调
 		        		WsClientAuthInfo authInfo = (WsClientAuthInfo) clientAuthService.doAuthenticate(authToken);
 	        			// 设置当前访问器的认证用户: 需要实现Principal接口
 						accessor.setUser(authInfo.getPrincipal());
-						return message;
 		        	}
-		        	// 手动抛出异常以便触发客户端errorCallback
-					// throw new RuntimeException("User authentication failure");
+					break;
 		        case DISCONNECT:
 		        	// 客户端请求断开连接前置处理..
 		        	

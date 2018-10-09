@@ -16,7 +16,7 @@ public class WsClientAuthInfo implements SaltedAuthenticationInfo {
     /**
      * The principals identifying the account associated with this AuthenticationInfo instance.
      */
-    protected Principal principal;
+    protected WsClientPrincipal principal;
     
     /**
      * The credentials verifying the account principals.
@@ -43,7 +43,7 @@ public class WsClientAuthInfo implements SaltedAuthenticationInfo {
      * @param principal  a account's identifying principal(s)
      * @param credentials the account corresponding principal that verify the principal.
      */
-	public WsClientAuthInfo(Principal principal, Object credentials) {
+	public WsClientAuthInfo(WsClientPrincipal principal, Object credentials) {
 		super();
 		this.principal = principal;
 		this.credentials = credentials;
@@ -57,7 +57,7 @@ public class WsClientAuthInfo implements SaltedAuthenticationInfo {
      * @param hashedCredentials the hashed credentials that verify the principals.
      * @param credentialsSalt   the salt used when hashing the hashedCredentials.
      */
-	public WsClientAuthInfo(Principal principal, Object hashedCredentials, String credentialsSalt) {
+	public WsClientAuthInfo(WsClientPrincipal principal, Object hashedCredentials, String credentialsSalt) {
 		super();
 		this.principal = principal;
 		this.credentials = hashedCredentials;
@@ -77,7 +77,7 @@ public class WsClientAuthInfo implements SaltedAuthenticationInfo {
      *
      * @param principal the indentifying attributes of the corresponding account.
      */
-	public void setPrincipal(Principal principal) {
+	public void setPrincipal(WsClientPrincipal principal) {
 		this.principal = principal;
 	}
 	
@@ -103,8 +103,7 @@ public class WsClientAuthInfo implements SaltedAuthenticationInfo {
 	 */
 	@Override
 	public String getCredentialsSalt() {
-		// TODO Auto-generated method stub
-		return null;
+		return this.credentialsSalt;
 	}
 	
     /**
