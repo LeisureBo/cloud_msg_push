@@ -42,11 +42,11 @@ public class RedisClientService {
 	/**
 	 * 缓存键的前缀
 	 */
-	public static final String PREFIX_KEY_VALUE = "uhungry:value:";
-	public static final String PREFIX_KEY_SET = "uhungry:set:";
-	public static final String PREFIX_KEY_LIST = "uhungry:list:";
-	public static final String PREFIX_KEY_HASH = "uhungry:hash:";
-	public static final String PREFIX_KEY_GEO = "uhungry:geo:";
+	public static final String PREFIX_KEY_VALUE = "msgpush:value:";
+	public static final String PREFIX_KEY_SET = "msgpush:set:";
+	public static final String PREFIX_KEY_LIST = "msgpush:list:";
+	public static final String PREFIX_KEY_HASH = "msgpush:hash:";
+	public static final String PREFIX_KEY_GEO = "msgpush:geo:";
 
 	@Resource(name = "stringRedisTemplate")
 	private RedisTemplate<String, String> redisTemplate;

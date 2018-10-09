@@ -1,6 +1,5 @@
 package com.bo.msgpush.stomp.interceptor;
 
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,14 +13,11 @@ import javax.annotation.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.AmqpException;
-import org.springframework.amqp.rabbit.connection.Connection;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-import org.springframework.lang.Nullable;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -29,8 +25,9 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
-import com.bo.common.utils.JsonUtils;
-import com.bo.msgpush.domain.auth.ClientAuthInfo;
+import com.bo.msgpush.domain.auth.WsClientAuthInfo;
+import com.bo.msgpush.domain.auth.WsClientAuthToken;
+import com.bo.msgpush.service.WsClientAuthService;
 import com.rabbitmq.client.Channel;
 
 /**
@@ -71,6 +68,9 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	@Autowired
 	private SimpMessagingTemplate simpMessagingTemplate;
     
+    @Resource
+    private WsClientAuthService clientAuthService;
+	
 	@Resource
 	private ConnectionFactory connectionFactory;
 	
@@ -98,17 +98,18 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		        	// stomp如何实现单用户多会话连接?
 		        	// 当同一个用户ID在不同终端登录时会生成多个sessionId这时这个userId就会绑定多个sessionId;
 		        	// 每个sessionId绑定着自己的订阅主题,其他用户向其发送消息时会传播到该userId下的所有session
+		        	List<String> uids = accessor.getNativeHeader("uid");
 		        	List<String> tokens = accessor.getNativeHeader("token");
-		        	if(tokens != null && !tokens.isEmpty()) {
-		        		Principal principal = verifyToken(tokens.get(0));
-		        		if (principal != null) {
-		        			// 设置当前访问器的认证用户: User类需要实现Principal接口
-							accessor.setUser(principal);
-							return message;
-						}
+		        	if(uids != null && !uids.isEmpty() && tokens != null && !tokens.isEmpty()) {
+		        		WsClientAuthToken authToken = new WsClientAuthToken(uids.get(0), tokens.get(0));
+		        		// 认证失败内部会抛出异常以触发客户端ErrorCallback回调
+		        		WsClientAuthInfo authInfo = (WsClientAuthInfo) clientAuthService.doAuthenticate(authToken);
+	        			// 设置当前访问器的认证用户: 需要实现Principal接口
+						accessor.setUser(authInfo.getPrincipal());
+						return message;
 		        	}
 		        	// 手动抛出异常以便触发客户端errorCallback
-					throw new RuntimeException("User authentication failure");
+					// throw new RuntimeException("User authentication failure");
 		        case DISCONNECT:
 		        	// 客户端请求断开连接前置处理..
 		        	
@@ -197,19 +198,6 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		}
 	}
 	
-    /**
-     * 解析token并获取认证用户信息
-     * 
-     * @param token
-     * @return
-     */
-    private Principal verifyToken(String token) {
-    	if(true) {
-    		return new ClientAuthInfo(token);
-    	}
-    	return null;
-    }
-    
     /**
      * 配置用户订阅地址: 自定义队列持久化并通过rabbitmq发送持久化消息以实现持久化订阅
      * 
