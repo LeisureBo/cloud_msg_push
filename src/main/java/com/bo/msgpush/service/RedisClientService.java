@@ -549,7 +549,7 @@ public class RedisClientService {
 	 * @param members
 	 * @return
 	 */
-	public boolean removeGeo(String key, String... members) {
+	public boolean deleteGeo(String key, String... members) {
 		try {
 			key = PREFIX_KEY_GEO + key;
 			GeoOperations<String, String> geoOps = redisTemplate.opsForGeo();
