@@ -267,7 +267,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	 * @return 订阅前缀
 	 */
 	private String verifySubDest(String subDest) {
-		// 校验订阅路径
+		// 校验订阅路径 TODO 正则校验
 		if (StringUtils.isBlank(subDest) || !subDest.startsWith("/")) {
 			return "";
 		}

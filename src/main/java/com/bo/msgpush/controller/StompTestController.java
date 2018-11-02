@@ -36,7 +36,7 @@ public class StompTestController {
 	private String userExchange;// p2p消息交换机 "amq.direct"
 	
     @Value("${push.suffix.sub.user}")
-    private String userSubPrefix;// p2p消息订阅后缀 "msg"
+    private String userSubSuffix;// p2p消息订阅后缀 "msg"
 	
 	@Resource
 	private SimpUserRegistry simpUserRegistry;// 用来获取连接的客户端信息
@@ -71,7 +71,7 @@ public class StompTestController {
 		logger.error("Error handling message: {}, exp: {}", clientMessage, e.getMessage());
 		ClientMessage serverMessage = new ClientMessage("System: sorry, send msg error..");
 		// 自定义前缀错误消息回发
-		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubPrefix + "." + clientMessage.getFromUserId(), serverMessage);
+		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubSuffix + "." + clientMessage.getFromUserId(), serverMessage);
 		return serverMessage;
 	}
 	
@@ -97,8 +97,8 @@ public class StompTestController {
 		 * simpMessagingTemplate.convertAndSend("/exchange/{exchange_name}/{routing_key}", serverMessage);
 		 **/ 
 		// 发送消息到目标用户
-		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubPrefix + "." + clientMessage.getToUserId(), targetMessage);
+		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubSuffix + "." + clientMessage.getToUserId(), targetMessage);
 		// 回发消息到当前用户
-		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubPrefix + "." + clientMessage.getFromUserId(), postbackMessage);
+		simpMessagingTemplate.convertAndSend("/exchange/" + userExchange + "/" + userSubSuffix + "." + clientMessage.getFromUserId(), postbackMessage);
 	}
 }

@@ -1,6 +1,7 @@
 package com.bo.msgpush.service;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -64,7 +65,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheValue(String key, String value, long time) {
@@ -72,7 +73,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_VALUE + key;
 			ValueOperations<String, String> valueOps = redisTemplate.opsForValue();
 			valueOps.set(key, value);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]失败, value[" + value + "]", e);
@@ -114,7 +115,7 @@ public class RedisClientService {
 	 * @param key
 	 * @param hashKey
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheHash(String key, String hashKey, String value, long time) {
@@ -122,7 +123,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_HASH + key;
 			HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
 			opsForHash.put(key, hashKey, value);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存Hash键值对失败: key[" + key + "], error[" + e + "]");
@@ -137,7 +138,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param map
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheHash(String key, Map<String, String> map, long time) {
@@ -145,7 +146,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_HASH + key;
 			HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
 			opsForHash.putAll(key, map);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存HashMap失败: key[" + key + "], error[" + e + "]");
@@ -241,7 +242,7 @@ public class RedisClientService {
 	}
 
 	/**
-	 * 删除key对应的hashMap中hashKey映射的值.或删除整个key对应的hashMap
+	 * 删除key对应的hashMap中hashKey映射的值
 	 *
 	 * @param key
 	 * @param hashKeys
@@ -250,15 +251,13 @@ public class RedisClientService {
 	public boolean deleteHash(String key, String... hashKeys) {
 		try {
 			key = PREFIX_KEY_HASH + key;
-			if (hashKeys == null || hashKeys.length == 0) {
-				redisTemplate.delete(key);
-			} else {
+			if (hashKeys != null && hashKeys.length != 0) {
 				HashOperations<String, String, String> opsForHash = redisTemplate.opsForHash();
 				opsForHash.delete(key, hashKeys);
+				return true;
 			}
-			return true;
 		} catch (Exception e) {
-			logger.error("获取缓存失败key[" + key + "], error[" + e + "]");
+			logger.error("删除hash缓存失败: key[" + key + "], hashKeys[" + hashKeys + "], error[" + e + "]");
 		}
 		return false;
 	}
@@ -268,7 +267,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheSet(String key, String value, long time) {
@@ -276,7 +275,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_SET + key;
 			SetOperations<String, String> valueOps = redisTemplate.opsForSet();
 			valueOps.add(key, value);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]失败, value[" + value + "]", e);
 		}
@@ -299,7 +298,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheSet(String key, Set<String> value, long time) {
@@ -307,7 +306,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_SET + key;
 			SetOperations<String, String> setOps = redisTemplate.opsForSet();
 			setOps.add(key, value.toArray(new String[value.size()]));
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]失败, value[" + value + "]", e);
@@ -348,7 +347,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheList(String key, String value, long time) {
@@ -356,7 +355,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_LIST + key;
 			ListOperations<String, String> listOps = redisTemplate.opsForList();
 			listOps.rightPush(key, value);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]失败, value[" + value + "]", e);
@@ -380,7 +379,7 @@ public class RedisClientService {
 	 *
 	 * @param key
 	 * @param value
-	 * @param time
+	 * @param time(毫秒)
 	 * @return
 	 */
 	public boolean cacheList(String key, List<String> value, long time) {
@@ -388,7 +387,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_LIST + key;
 			ListOperations<String, String> listOps = redisTemplate.opsForList();
 			listOps.rightPushAll(key, value);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]失败, value[" + value + "]", e);
@@ -468,7 +467,7 @@ public class RedisClientService {
 	 * @param x
 	 * @param y
 	 * @param member
-	 * @param time(秒) <= 0 不过期
+	 * @param time(毫秒) <= 0 不过期
 	 * @return
 	 */
 	public boolean cacheGeo(String key, double x, double y, String member, long time) {
@@ -476,7 +475,7 @@ public class RedisClientService {
 			key = PREFIX_KEY_GEO + key;
 			GeoOperations<String, String> geoOps = redisTemplate.opsForGeo();
 			geoOps.geoAdd(key, new Point(x, y), member);
-			if (time > 0) redisTemplate.expire(key, time, TimeUnit.SECONDS);
+			if (time > 0) redisTemplate.expire(key, time, TimeUnit.MILLISECONDS);
 			return true;
 		} catch (Exception e) {
 			logger.error("缓存[" + key + "]" + "失败, point[" + x + "," + y + "], member[" + member + "]" + ", error[" + e + "]");
@@ -662,11 +661,31 @@ public class RedisClientService {
 		}
 		return false;
 	}
-
+	
+	/**
+	 * 根据模式串获取所有键值
+	 * 
+	 * @param pattern
+	 * @return
+	 */
+	public Set<String> getKeys(String pattern) {
+		Set<String> keys = new HashSet<>();
+		try {
+			return redisTemplate.keys(pattern);
+		} catch (Exception e) {
+			logger.error("获取缓存keys失败: pattern[" + pattern + "], error[" + e + "]");
+		}
+		return keys;
+	}
+	
 	public boolean removeValue(String key) {
 		return remove(PREFIX_KEY_VALUE + key);
 	}
 
+	public boolean removeHash(String key) {
+		return remove(PREFIX_KEY_HASH + key);
+	}
+	
 	public boolean removeSet(String key) {
 		return remove(PREFIX_KEY_SET + key);
 	}
@@ -695,14 +714,73 @@ public class RedisClientService {
 		return false;
 	}
 
+	public boolean setExpireTimeForValue(String key, long time, TimeUnit timeUnit) {
+		return setExpireTime(PREFIX_KEY_VALUE + key, time, timeUnit);
+	}
+
+	public boolean setExpireTimeForHash(String key, long time, TimeUnit timeUnit) {
+		return setExpireTime(PREFIX_KEY_HASH + key, time, timeUnit);
+	}
+	
+	public boolean setExpireTimeForSet(String key, long time, TimeUnit timeUnit) {
+		return setExpireTime(PREFIX_KEY_SET + key, time, timeUnit);
+	}
+
+	public boolean setExpireTimeForList(String key, long time, TimeUnit timeUnit) {
+		return setExpireTime(PREFIX_KEY_LIST + key, time, timeUnit);
+	}
+
+	public boolean setExpireTimeForGeo(String key, long time, TimeUnit timeUnit) {
+		return setExpireTime(PREFIX_KEY_GEO + key, time, timeUnit);
+	}
+	
 	/**
-	 * 获取key对应的过期时间, 秒
+	 * 设置key对应的缓存过期时间
+	 * 
+	 * @param key
+	 * @param time
+	 * @param timeUnit
+	 * @return
+	 */
+	private boolean setExpireTime(String key, long time, TimeUnit timeUnit) {
+		try {
+			if(time > 0) {
+				redisTemplate.expire(key, time, timeUnit);
+				return true;
+			}
+		} catch (Exception e) {
+			logger.error("设置缓存时间失败: key[" + key + "], error[" + e + "]");
+		}
+		return false;
+	}
+	
+	public Long getExpireTimeOfValue(String key) {
+		return getExpireTime(PREFIX_KEY_VALUE + key);
+	}
+
+	public Long getExpireTimeOfHash(String key) {
+		return getExpireTime(PREFIX_KEY_HASH + key);
+	}
+	
+	public Long getExpireTimeOfSet(String key) {
+		return getExpireTime(PREFIX_KEY_SET + key);
+	}
+
+	public Long getExpireTimeOfList(String key) {
+		return getExpireTime(PREFIX_KEY_LIST + key);
+	}
+
+	public Long getExpireTimeOfGeo(String key) {
+		return getExpireTime(PREFIX_KEY_GEO + key);
+	}
+	
+	/**
+	 * 获取key对应的缓存过期时间(秒)
 	 *
 	 * @param key
 	 * @return
 	 */
-	public Long getExpireTimeForValue(String key) {
-		key = PREFIX_KEY_VALUE + key;
+	private Long getExpireTime(String key) {
 		Long expire = -1L;
 		try {
 			expire = redisTemplate.getExpire(key);
@@ -711,8 +789,7 @@ public class RedisClientService {
 		}
 		return expire;
 	}
-
-
+	
 	/**
 	 * 分布式锁一般有三种实现方式：http://www.importnew.com/27477.html
 	 *
