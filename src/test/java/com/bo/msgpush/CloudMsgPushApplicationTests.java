@@ -8,6 +8,10 @@ import javax.annotation.Resource;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.springframework.amqp.AmqpException;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessageDeliveryMode;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
 import org.springframework.amqp.rabbit.core.RabbitTemplate.ReturnCallback;
@@ -73,16 +77,25 @@ public class CloudMsgPushApplicationTests {
 		clientMessage.setMessage("System Info: Good evening everyone!");
 		clientMessage.setFromUserId("System");
 		clientMessage.setToUserId("21");
-		Map<String, Object> headers = new HashMap<String, Object>();
-		headers.put("persistent", true);
-		for(int i=1; i<6;i++) {
-			clientMessage.setMessage("system info: " + i);
-//			rabbitTemplate.convertAndSend("amq.topic", "msg.Lily", JsonUtils.toJson(clientMessage));
-			rabbitTemplate.convertAndSend("stomp-subscription-wD_WPz0YtxNUlNdM25efTg", JsonUtils.toJson(clientMessage));// 发送到默认交换机，路由键为队列名称
-//			simpMessagingTemplate.convertAndSend("/queue/test", clientMessage, headers);
-//			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/test", clientMessage, headers);
+//		Map<String, Object> headers = new HashMap<String, Object>();
+//		headers.put("persistent", false);
+		MessagePostProcessor postProcessor = new MessagePostProcessor() {
+			@Override
+			public Message postProcessMessage(Message message) throws AmqpException {
+				// JMS标准中约定priority可以为0~9的数值，值越大表示权重越高，默认值为4
+				// RabbitMQ中：The message priority field is defined as an unsigned byte, so in practice priorities should be between 0 and 255.
+				message.getMessageProperties().setPriority(4);// rabbitmq中消息优先级默认值为0，范围0~255
+				message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+				message.getMessageProperties().setExpiration(String.valueOf(1000 * 60));// 配置过期时间(毫秒)
+				// ...
+				return message;
+			}
+		};
+		for(int i = 1; i < 2; i++) {
+			clientMessage.setMessage("system info -> " + i);
+			rabbitTemplate.convertAndSend("amq.direct", "msg.Money", clientMessage, postProcessor);// 发送到默认交换机，路由键为队列名称
+//			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/msg.Money", clientMessage, headers);
 		}
-//		System.in.read();
 	}
 
 }

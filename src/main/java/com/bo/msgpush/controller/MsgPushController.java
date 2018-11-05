@@ -77,6 +77,7 @@ public class MsgPushController {
 					// RabbitMQ中：The message priority field is defined as an unsigned byte, so in practice priorities should be between 0 and 255.
 					message.getMessageProperties().setPriority(4);// rabbitmq中消息优先级默认值为0，范围0~255
 					message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+					message.getMessageProperties().setExpiration(String.valueOf(1000 * 60));// 配置过期时间(毫秒)
 					// ...
 					return message;
 				}
