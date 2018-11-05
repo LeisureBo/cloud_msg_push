@@ -22,6 +22,9 @@ public class MessageHeader implements Serializable {
 	/** 消息是否持久化 */
 	private boolean persistent;
 
+	/** 消息过期时间: 毫秒 */
+	private int expiration;
+	
 	/**
 	 * @return the priority
 	 */
@@ -50,12 +53,26 @@ public class MessageHeader implements Serializable {
 		this.persistent = persistent;
 	}
 
+	/**
+	 * @return the expiration
+	 */
+	public int getExpiration() {
+		return expiration;
+	}
+
+	/**
+	 * @param expiration the expiration to set
+	 */
+	public void setExpiration(int expiration) {
+		this.expiration = expiration;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
-		return "MessageHeader [priority=" + priority + ", persistent=" + persistent + "]";
+		return "MessageHeader [priority=" + priority + ", persistent=" + persistent + ", expiration=" + expiration + "]";
 	}
-	
+
 }

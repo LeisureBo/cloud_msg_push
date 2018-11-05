@@ -64,6 +64,7 @@ public class StompClientController {
 		if(topicMessage.getMsgHeader() != null) {
 			headers.put("persistent", topicMessage.getMsgHeader().getPersistent());
 			headers.put("priority", topicMessage.getMsgHeader().getPriority());
+			headers.put("expiration", topicMessage.getMsgHeader().getExpiration());
 		}
 		String destination = "/exchange/" + topicExchange + "/" + topicMessage.getRoutingKey();
 		simpMessagingTemplate.convertAndSend(destination, topicMessage, headers);
@@ -77,6 +78,7 @@ public class StompClientController {
 		if(operMessage.getMsgHeader() != null) {
 			headers.put("persistent", operMessage.getMsgHeader().getPersistent());
 			headers.put("priority", operMessage.getMsgHeader().getPriority());
+			headers.put("expiration", operMessage.getMsgHeader().getExpiration());
 		}
 		String destination = "/exchange/" + operExchange + "/" + operMessage.getRoutingKey();
 		simpMessagingTemplate.convertAndSend(destination, operMessage, headers);
@@ -90,6 +92,7 @@ public class StompClientController {
 		if(userMessage.getMsgHeader() != null) {
 			headers.put("persistent", userMessage.getMsgHeader().getPersistent());
 			headers.put("priority", userMessage.getMsgHeader().getPriority());
+			headers.put("expiration", userMessage.getMsgHeader().getExpiration());
 		}
 		String destination = "/exchange/" + userExchange + "/" + getUserRoutingKey(userMessage.getTargetUid());
 		simpMessagingTemplate.convertAndSend(destination, userMessage, headers);

@@ -161,6 +161,24 @@
 			"toUserId" : $("#toUserId").val(),
 			"message" : msg
 		};
+		var user_msg = {
+			"msgHeader": {
+		        "priority": 0,
+		        "persistent": true,
+		        "expiration": 20000
+		    },
+		    "msgTag": "H5 Tag",
+		    "msgType": "Msg Type",
+		    "msgBody": {
+		        "title": "title",
+		        "content": "test",
+		        "img": "img",
+		        "url": "url",
+		        "remark": "remark"
+		    },
+		   "originUid": currentUser,
+		   "targetUid": $("#toUserId").val(),
+		}
 		console.log(clientMessage);
 		// 自定义消息头(必须直接发送到消息代理目的地才有效,如果发送至@MessageMapping注解方法则需要在后台程序中设置)
 		var headers = {
@@ -170,6 +188,7 @@
 		}
 		//stompClient.send("/app/send-msg", {}, JSON.stringify(clientMessage));
 		stompClient.send("/app/send-custom", headers, JSON.stringify(clientMessage));
+		//stompClient.send("/app/send_ums", {}, JSON.stringify(user_msg));
 		//stompClient.send("/amq/queue/user-Xiong", headers, JSON.stringify(clientMessage));
 		$("#notice").val('');
 	}
