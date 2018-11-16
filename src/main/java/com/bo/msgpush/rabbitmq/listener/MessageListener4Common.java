@@ -56,9 +56,11 @@ public class MessageListener4Common implements ChannelAwareMessageListener {
 				channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);// false只确认当前一个消息收到，true确认所有consumer获得的消息
 			// 如果消息已被处理失败2次则拒绝接收
 			}else if(message.getMessageProperties().getRedelivered()){
+				Thread.sleep(1000);// 避免过多失败log
 				logger.info("common message has been redelivered and will be rejected");
 				channel.basicReject(message.getMessageProperties().getDeliveryTag(), false);// 拒绝消息且不返回队列
 			}else {
+				Thread.sleep(1000);// 避免过多失败log
 				channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);// 重新发回队列
 			}
 		} catch (Exception e) {
