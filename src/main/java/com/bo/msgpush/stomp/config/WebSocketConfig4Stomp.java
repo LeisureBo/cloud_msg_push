@@ -61,7 +61,7 @@ public class WebSocketConfig4Stomp implements WebSocketMessageBrokerConfigurer {
 				.addInterceptors(clientHandshakeInterceptor())
 				.withSockJS()// 指定使用sockJs协议
 				// 该项配置经测试：心跳时间间隔由客户端指定生效，该项配置无效。
-				.setHeartbeatTime(30000);// 设置向SockJS客户端发送心跳时间间隔(默认25s)
+				.setHeartbeatTime(25000);// 设置向SockJS客户端发送心跳时间间隔(默认25s)
 		// 普通的stomp client连接端点
 		registry.addEndpoint("/stomp-ws")
 				.setAllowedOrigins("*")

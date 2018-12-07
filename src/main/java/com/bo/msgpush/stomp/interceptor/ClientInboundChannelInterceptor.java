@@ -25,8 +25,10 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 
+import com.bo.msgpush.constant.MsgPushConst;
 import com.bo.msgpush.domain.auth.WsClientAuthInfo;
 import com.bo.msgpush.domain.auth.WsClientAuthToken;
+import com.bo.msgpush.service.RedisClientService;
 import com.bo.msgpush.service.WsClientAuthService;
 import com.rabbitmq.client.Channel;
 
@@ -57,7 +59,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 	private String operSubPrefix;// 运营消息订阅前缀 "/oper/"
     
     @Value("${push.prefix.sub.user}")
-    private String userSubPrefix;// p2p消息订阅前缀 "/user/"
+    private String userSubPrefix;// p2p消息订阅前缀 "/p2p/"
     
     @Value("${push.prefix.exclude}")
     private String excludePrefixs;// 需要排除校验的前缀
@@ -68,8 +70,8 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
     @Value("${push.auth.enable}")
     private boolean enableAuth;
     
-	@Autowired
-	private SimpMessagingTemplate simpMessagingTemplate;
+	@Resource
+	private RedisClientService redisClientService;
     
     @Resource
     private WsClientAuthService clientAuthService;
@@ -115,6 +117,8 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 					break;
 		        case DISCONNECT:
 		        	// 客户端请求断开连接前置处理..
+					// In some cases this event may be published more than once per session. 
+					// Components should be idempotent with regard to multiple disconnect events.
 		        	
 		            break;
 		        case SUBSCRIBE:
@@ -127,15 +131,16 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		        	break;
 		        case SEND:
 		        	// 用户发送信息前置处理..
+//	        		logger.info(accessor.getUser() + " send msg pre-processing...");
 		        	if(accessor.getUser() != null) {
-		        		logger.info(accessor.getUser() + "send msg pre-processing...");
+
 		        	}
 		        	break;
 		        case ACK:
 		        	// 客户端确认ack前置处理..
-		        	//String ackHeader = accessor.getAck();
-		        	//nativeHeaders={receipt=[my receipt], message-id=[T_sub-1@@session-QxEX61rr5aLxxdplLHWLcQ@@4], subscription=[sub-1]}
-		        	//logger.info(accessor.getNativeHeader("message-id").get(0));
+		        	// String ackHeader = accessor.getAck();
+		        	// nativeHeaders={receipt=[my receipt], message-id=[T_sub-1@@session-QxEX61rr5aLxxdplLHWLcQ@@4], subscription=[sub-1]}
+		        	// logger.info(accessor.getNativeHeader("message-id").get(0));
 		        	break;
 		        case NACK:
 		        	// 客户端nack前置处理..
@@ -165,15 +170,19 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 					// 用户请求断开连接后置处理..
 					// In some cases this event may be published more than once per session. 
 					// Components should be idempotent with regard to multiple disconnect events.
+					logger.info(accessor.getUser() + " request disconnect post-processing...");
 					if (accessor.getUser() != null) {
-						logger.info(accessor.getUser() + " disconnected ...");
+						/*String onlineStatus = redisClientService.getValue(accessor.getUser().getName());
+						if(!MsgPushConst.OnlineStatus.OFFLINE.value().toString().equals(onlineStatus)) {
+							redisClientService.cacheValue(accessor.getUser().getName(), MsgPushConst.OnlineStatus.OFFLINE.value().toString());
+						}*/
 					}
 					break;
 				case SUBSCRIBE:
 					// 用户请求订阅后置处理..
+//					logger.info(accessor.getUser() + " subscribe " + accessor.getDestination() + " succeed ...");
 					if(accessor.getUser() != null) {
-						logger.info(accessor.getUser() + " subscribe " + accessor.getDestination() + " succeed ...");
-//						simpMessagingTemplate.convertAndSendToUser("/topic/msg","订阅消息发送成功");
+						// 通知用户订阅成功..
 					}
 					break;
 		        case UNSUBSCRIBE:
@@ -182,8 +191,9 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		        	break;
 		        case SEND:
 		        	// 用户发送信息后置处理..
+//	        		logger.info(accessor.getUser() + " send msg post-processing...");
 		        	if(accessor.getUser() != null) {
-		        		logger.info(accessor.getUser() + "send msg post-processing...");
+		        		
 		        	}
 		        	break;
 		        case ACK:
@@ -241,7 +251,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 			args.put("x-message-ttl", 60000);// 设置队列消息过期时间(ms)
 			args.put("x-expires", 1800000);// 设置队列过期时间(ms)
 			channel.queueDeclare(queueName, true, false, false, null);// 第5个参数设置队列属性
-			channel.basicQos(5, false);// 设置每个消费者每次抓取的未ack消息最大数量(只有在stomp客户端设置为ack应答有效)
+			channel.basicQos(5, true);// 设置每个消费者每次抓取的未ack消息最大数量(只有在stomp客户端设置为ack应答有效)
 			channel.queueBind(queueName, exchange, routingKey);
 		} catch (Exception e) {
 			logger.error(e.getMessage());
@@ -255,7 +265,7 @@ public class ClientInboundChannelInterceptor implements ChannelInterceptor {
 		 * 2.通过rabbitmq提供的接口将消息发送到该queue绑定的交换机(可设置消息持久化等，通过spring rabbitTemplate发送则默认持久化)
 		 * rabbitTemplate.convertAndSend("amq.topic", "routingkey", JsonUtils.toJson(serverMessage));
 		 */
-		// 设置实际的订阅地址: mq代理前缀 + 队列名称
+		// 设置实际的订阅地址: rabbitmq消息代理前缀 + 队列名称
 		accessor.setDestination(brokerPrefix + queueName);
 	}
 	

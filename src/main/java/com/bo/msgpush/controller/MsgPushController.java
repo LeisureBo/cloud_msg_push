@@ -32,7 +32,7 @@ import com.bo.msgpush.domain.msg.UserMessage;
  * @version 2018年7月17日 下午2:18:41
  */
 @RestController
-@RequestMapping("/msgpush")
+//@RequestMapping("/msgpush")
 public class MsgPushController {
 	
 	@Value("${push.exchange.topic}")
@@ -56,18 +56,21 @@ public class MsgPushController {
 	@PostMapping("/send_tms")
 	public ProcessResult sendTopicMsg(@RequestBody TopicMessage topicMessage) {
 		ProcessResult processResult = new ProcessResult();
+		logger.info("Begin server send topic msg --> params: " + topicMessage);
 		try {
 			rabbitTemplate.convertAndSend(topicExchange, topicMessage.getRoutingKey(), topicMessage);
 		} catch (AmqpException e) {
 			processResult.setRetCode(-1);
 			logger.error("sendTopicMsg error", e);
 		}
+		logger.info("End server send topic msg --> response: " + processResult);
 		return processResult;
 	}
 	
 	@PostMapping("/send_oms")
 	public ProcessResult sendOperMsg(@RequestBody OperMessage operMessage) {
 		ProcessResult processResult = new ProcessResult();
+		logger.info("Begin server send operation msg --> params: " + operMessage);
 		try {
 			// 消息属性设置
 			MessagePostProcessor postProcessor = new MessagePostProcessor() {
@@ -88,18 +91,21 @@ public class MsgPushController {
 			processResult.setRetCode(-1);
 			logger.error("sendOperMsg error", e);
 		}
+		logger.info("End server send operation msg --> response: " + processResult);
 		return processResult;
 	}
 	
 	@PostMapping("/send_ums")
 	public ProcessResult sendUserMsg(@RequestBody UserMessage userMessage) {
 		ProcessResult processResult = new ProcessResult();
+		logger.info("Begin server send user msg --> params: " + userMessage);
 		try {
 			rabbitTemplate.convertAndSend(userExchange, getUserRoutingKey(userMessage.getTargetUid()), userMessage);
 		} catch (AmqpException e) {
 			processResult.setRetCode(-1);
 			logger.error("sendUserMsg error", e);
 		}
+		logger.info("End server send user msg --> response: " + processResult);
 		return processResult;
 	}
 	
