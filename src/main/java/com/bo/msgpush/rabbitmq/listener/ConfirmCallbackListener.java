@@ -30,9 +30,9 @@ public class ConfirmCallbackListener implements RabbitTemplate.ConfirmCallback {
 	@Override
 	public void confirm(CorrelationData correlationData, boolean ack, String cause) {
 		if(!ack) {
-			logger.info("send message ack failed: " + cause + ", ID: " + String.valueOf(correlationData));
+			logger.info("send message ack failed: " + cause + " -> ID: " + String.valueOf(correlationData));
 		}else {
-			logger.info("send message ack success"); // 只确认生产者消息发送成功，消费者是否处理成功不做保证
+			logger.info("send message ack success -> ID: " + String.valueOf(correlationData)); // 只确认生产者消息发送成功，消费者是否处理成功不做保证
 		}
 	}
 
