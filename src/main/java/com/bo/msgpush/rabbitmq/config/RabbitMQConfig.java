@@ -110,7 +110,8 @@ public class RabbitMQConfig {
 		CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 		connectionFactory.setAddresses(addresses);// addresses list of addresses with form "host[:port],..."
 		connectionFactory.setVirtualHost(virtualHost);// 虚拟主机
-		connectionFactory.setPublisherConfirms(true);// 允许设置消息回调
+		connectionFactory.setPublisherConfirms(true);// 开启confirmCallback模式(手动ack)
+		connectionFactory.setPublisherReturns(true);// 开启returnCallback模式
 		connectionFactory.setChannelCacheSize(sessionCacheSize);// 设置连接数量
 		connectionFactory.setUsername(username);
 		connectionFactory.setPassword(password);
@@ -122,6 +123,7 @@ public class RabbitMQConfig {
 	public RabbitTemplate rabbitTemplate(MessageConverter messageConverter) {
 		RabbitTemplate template = new RabbitTemplate(connectionFactory());
 		template.setMessageConverter(messageConverter);// 设置消息转换器
+		template.setMandatory(true);// 开启强制委托模式->配合returnCallback
 		template.setConfirmCallback(new ConfirmCallbackListener());
 		template.setReturnCallback(new ReturnCallBackListener());
 		return template;
