@@ -1,8 +1,7 @@
 package com.bo.msgpush;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.annotation.Resource;
 
@@ -13,8 +12,7 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageDeliveryMode;
 import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.core.RabbitTemplate.ConfirmCallback;
-import org.springframework.amqp.rabbit.core.RabbitTemplate.ReturnCallback;
+import org.springframework.amqp.rabbit.support.CorrelationData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -31,6 +29,8 @@ import com.bo.msgpush.service.WebSocketHandlerService;
 @SpringBootTest
 public class CloudMsgPushApplicationTests {
 
+	private AtomicLong atoId = new AtomicLong(0);
+	
 	// 通过RabbitTemplate发送的消息默认持久化
 	private RabbitTemplate rabbitTemplate;
 	
@@ -93,9 +93,11 @@ public class CloudMsgPushApplicationTests {
 		};
 		for(int i = 1; i < 2; i++) {
 			clientMessage.setMessage("system info -> " + i);
-			rabbitTemplate.convertAndSend("amq.direct", "msg.Money", clientMessage, postProcessor);// 发送到默认交换机，路由键为队列名称
+			rabbitTemplate.convertAndSend("amq.direct", "msg.Jack", clientMessage, 
+					postProcessor, new CorrelationData(String.valueOf(atoId.incrementAndGet())));// 发送到默认交换机，路由键为队列名称
 //			simpMessagingTemplate.convertAndSend("/exchange/amq.direct/msg.Money", clientMessage, headers);
 		}
+		System.in.read();
 	}
 
 }
